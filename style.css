@@ -825,8 +825,12 @@ html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out inf
 }
 .act-desc {
   color: var(--mute);
-  font-size: 0.98rem;
-  line-height: 1.6;
+  /* 0.9rem — in line with the site's other note/copy sizes (call roles,
+     reel captions, gear notes run 0.84–0.95rem). The previous 0.98rem was
+     the second-largest small copy on the page and read oversized inside the
+     narrow mobile act card. */
+  font-size: 0.9rem;
+  line-height: 1.55;
   max-width: 52ch;
 }
 
