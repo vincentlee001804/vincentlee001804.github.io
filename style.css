@@ -1933,6 +1933,14 @@ html.motion-on .frame-view.is-open .frame-view-index {
 }
 /* Fits the whole title block into one 956px phone screen and centres it. */
 @media (max-width: 767px) {
+  /* svh, not dvh, for the full-screen cards on phones: the dynamic viewport
+     oscillates while the URL bar / toolbar animate in and out on the first
+     slight scroll, and a 100dvh hero resizes with it — everything under the
+     hero jumps, which reads as flicker. svh pins the card to the most-
+     constrained viewport; when the bars hide there is only extra ink below,
+     which reads as breathing room. Same for the end card at page bottom. */
+  #cold-open,
+  .credits-final { min-height: 100svh; }
   .cold-open-inner { padding-block: 3rem 4rem; }
   #cold-open h1 { font-size: clamp(3rem, 13vw, 9rem); }
   #cold-open .mb-10 { margin-bottom: 1.25rem; }

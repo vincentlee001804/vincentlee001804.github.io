@@ -921,14 +921,25 @@ function initScrollReveals() {
     batch.forEach((el, i) => reveal(el, i));
   }
 
-  gsap.set(items, { opacity: 0, y: 22 });
-  ScrollTrigger.batch(items, {
+  /* Hide ONLY what is still below the fold. Anything already in view (the
+     hero on first paint, or a mid-page reload) has painted — hiding it now
+     would flash content out and back in when the GSAP CDN arrives after
+     first paint, which on a phone is the 闪烁 at the very beginning. Those
+     items are marked revealed so neither the batch nor the sweep touches
+     them. */
+  const inView = items.filter((el) => el.getBoundingClientRect().top < window.innerHeight);
+  inView.forEach((el) => { el.dataset.revealed = "1"; });
+  const below = items.filter((el) => !inView.includes(el));
+  if (!below.length) return;
+
+  gsap.set(below, { opacity: 0, y: 22 });
+  ScrollTrigger.batch(below, {
     start: "top 88%",
     onEnter: revealBatch,
     onEnterBack: revealBatch,
   });
   /* Safety net for anything the batch misses (notably content inside a pin). */
-  items.forEach((el) => queueReveal(el, (e) => reveal(e, 0)));
+  below.forEach((el) => queueReveal(el, (e) => reveal(e, 0)));
 }
 
 /* The Reel gets its own entrance instead of scroll-reveal: on desktop
