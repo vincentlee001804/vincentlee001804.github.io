@@ -32,7 +32,7 @@
 <!-- ============ COLD OPEN ============ -->
 <section id="cold-open" class="relative min-h-screen flex items-center overflow-hidden">
   <div class="light-leak" aria-hidden="true"></div>
-  <div class="relative z-10 max-w-5xl mx-auto px-6 w-full pt-24 pb-20">
+  <div class="cold-open-inner relative z-10 max-w-5xl mx-auto px-6 w-full pt-24 pb-20">
     <div class="flex flex-wrap items-start justify-between gap-3 sm:gap-6 mb-10">
       <div class="font-mono text-[0.65rem] tracking-[0.22em] uppercase text-[#6b6b76]">
         <div>Reel 01 · Take 01</div>
@@ -143,77 +143,86 @@
 
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="feature-stage">
-        <div class="acts-frame" id="acts-frame">
-          <div class="act-shot is-first" data-act="0">
-            <img src="assets/act-01.webp" alt="Lee Tech News — the content origin" />
-          </div>
-          <div class="act-shot" data-act="1">
-            <img src="assets/act-02.webp" alt="Sarawak x Singapore AI Design Hackathon — the hot seat" />
-          </div>
-          <div class="act-shot" data-act="2">
-            <img src="assets/act-03.webp" alt="KitchenCurator — Grand Winner, TFE x SCENT Demo Day" />
-          </div>
-          <div class="act-shot" data-act="3">
-            <img src="assets/act-04.webp" alt="Women in Claude learning archive — shipping for ANCHR AI Labs in Singapore" />
-          </div>
-          <div class="act-shot" data-act="4">
-            <div class="act-shot-stack">
-              <img class="act-still act-still-a" src="assets/act-05-1.webp" alt="AI Friendship Design Hackathon — mentoring teams on the floor" />
-              <img class="act-still act-still-b" src="assets/act-05-2.webp" alt="AI Friendship Design Hackathon — facilitators with participant teams" />
+        <div class="act-track" id="act-track">
+          <div class="act-slide" data-act="0">
+            <div class="act-shot is-first" data-act="0">
+              <img src="assets/act-01.webp" alt="Lee Tech News — the content origin" />
+            </div>
+            <div class="act-meta is-first" data-act="0">
+              <div class="act-block">
+                <p class="act-num">Act I · 2023:03</p>
+                <h3 class="act-title">The Content Origin</h3>
+                <p class="act-desc">Started Lee Tech News — began creating tech content and never stopped.</p>
+              </div>
             </div>
           </div>
-          <div class="act-shot" data-act="5">
-            <div class="act-slate-missing" data-slot="act-06" aria-label="Act VI still — not yet supplied">
-              <span class="asm-glyph">?</span>
-              <span class="asm-tag">Shot pending — to be continued…</span>
-              <div class="img-slot-corners" aria-hidden="true"></div>
+          <div class="act-slide" data-act="1">
+            <div class="act-shot" data-act="1">
+              <img src="assets/act-02.webp" alt="Sarawak x Singapore AI Design Hackathon — the hot seat" />
+            </div>
+            <div class="act-meta" data-act="1">
+              <div class="act-block">
+                <p class="act-num">Act II · 2025:09</p>
+                <h3 class="act-title">The Hot Seat</h3>
+                <p class="act-desc">Joined the Sarawak X Singapore AI Design Hackathon as a participant. Finished — and got hooked.</p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="acts-slate" id="acts-slate">
-          <div class="act-meta is-first" data-act="0">
-            <div class="act-block">
-              <p class="act-num">Act I · 2023:03</p>
-              <h3 class="act-title">The Content Origin</h3>
-              <p class="act-desc">Started Lee Tech News — began creating tech content and never stopped.</p>
+          <div class="act-slide" data-act="2">
+            <div class="act-shot" data-act="2">
+              <img src="assets/act-03.webp" alt="KitchenCurator — Grand Winner, TFE x SCENT Demo Day" />
+            </div>
+            <div class="act-meta" data-act="2">
+              <div class="act-block">
+                <p class="act-num">Act III · 2026:05</p>
+                <h3 class="act-title">The Win</h3>
+                <p class="act-desc">Built KitchenCurator with Team Tekkonologia. <span class="text-[#f0a202] font-medium">Grand Winner</span>, TFE x SCENT Demo Day Cohort 2.</p>
+              </div>
             </div>
           </div>
-          <div class="act-meta" data-act="1">
-            <div class="act-block">
-              <p class="act-num">Act II · 2025:09</p>
-              <h3 class="act-title">The Hot Seat</h3>
-              <p class="act-desc">Joined the Sarawak X Singapore AI Design Hackathon as a participant. Finished — and got hooked.</p>
+          <div class="act-slide" data-act="3">
+            <div class="act-shot" data-act="3">
+              <img src="assets/act-04.webp" alt="Women in Claude learning archive — shipping for ANCHR AI Labs in Singapore" />
+            </div>
+            <div class="act-meta" data-act="3">
+              <div class="act-block">
+                <p class="act-num">Act IV · 2026:07</p>
+                <h3 class="act-title">Shipping for Real</h3>
+                <p class="act-desc">Freelance AI Web Developer for ANCHR AI Labs — launched the Women in Claude event archive in Singapore.</p>
+              </div>
             </div>
           </div>
-          <div class="act-meta" data-act="2">
-            <div class="act-block">
-              <p class="act-num">Act III · 2026:05</p>
-              <h3 class="act-title">The Win</h3>
-              <p class="act-desc">Built KitchenCurator with Team Tekkonologia. <span class="text-[#f0a202] font-medium">Grand Winner</span>, TFE x SCENT Demo Day Cohort 2.</p>
+          <div class="act-slide" data-act="4">
+            <div class="act-shot" data-act="4">
+              <div class="act-shot-stack">
+                <img class="act-still act-still-a" src="assets/act-05-1.webp" alt="AI Friendship Design Hackathon — mentoring teams on the floor" />
+                <img class="act-still act-still-b" src="assets/act-05-2.webp" alt="AI Friendship Design Hackathon — facilitators with participant teams" />
+              </div>
+            </div>
+            <div class="act-meta" data-act="4">
+              <div class="act-block">
+                <p class="act-num">Act V · 2026:09</p>
+                <h3 class="act-title">The Facilitator&rsquo;s Chair</h3>
+                <p class="act-desc">Returned to the same hackathon as Technical Facilitator &amp; SAIYAN Ambassador — mentored 11 teams.</p>
+              </div>
             </div>
           </div>
-          <div class="act-meta" data-act="3">
-            <div class="act-block">
-              <p class="act-num">Act IV · 2026:07</p>
-              <h3 class="act-title">Shipping for Real</h3>
-              <p class="act-desc">Freelance AI Web Developer for ANCHR AI Labs — launched the Women in Claude event archive in Singapore.</p>
+          <div class="act-slide" data-act="5">
+            <div class="act-shot" data-act="5">
+              <div class="act-slate-missing" data-slot="act-06" aria-label="Act VI still — not yet supplied">
+                <span class="asm-glyph">?</span>
+                <span class="asm-tag">Shot pending — to be continued…</span>
+                <div class="img-slot-corners" aria-hidden="true"></div>
+              </div>
             </div>
-          </div>
-          <div class="act-meta" data-act="4">
-            <div class="act-block">
-              <p class="act-num">Act V · 2026:09</p>
-              <h3 class="act-title">The Facilitator&rsquo;s Chair</h3>
-              <p class="act-desc">Returned to the same hackathon as Technical Facilitator &amp; SAIYAN Ambassador — mentored 11 teams.</p>
-            </div>
-          </div>
-          <div class="act-meta" data-act="5">
-            <div class="act-block">
-              <p class="act-num">Act VI · ????:??</p>
-              <h3 class="act-title">Next Node &mdash; Unwritten</h3>
-              <p class="act-desc">The next node is unwritten. Maybe it connects to you.</p>
-              <p class="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf] mt-3 mb-4">To be continued…</p>
-              <a href="#credits" class="slate-btn slate-btn-primary magnetic">Write the next scene with me</a>
+            <div class="act-meta" data-act="5">
+              <div class="act-block">
+                <p class="act-num">Act VI · ????:??</p>
+                <h3 class="act-title">Next Node &mdash; Unwritten</h3>
+                <p class="act-desc">The next node is unwritten. Maybe it connects to you.</p>
+                <p class="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf] mt-3 mb-4">To be continued…</p>
+                <a href="#credits" class="slate-btn slate-btn-primary magnetic">Write the next scene with me</a>
+              </div>
             </div>
           </div>
         </div>

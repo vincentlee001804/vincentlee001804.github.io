@@ -595,32 +595,33 @@ function initHud() {
 
 /* ================= ACTS ================= */
 
-function initActs() {
-  const shots = gsap.utils.toArray(".act-shot");
-  const metas = gsap.utils.toArray(".act-meta");
-  const frames = Array.from(document.querySelectorAll(".scrub-frame"));
-  if (shots.length < 2) return;
-
-  gsap.set(shots, { opacity: 0 });
-  gsap.set(metas, { opacity: 0 });
-  gsap.set([shots[0], metas[0]], { opacity: 1 });
-
-  let active = 0;
-  function setActive(idx) {
+/* Scrubber highlight, shared by the desktop pin and the mobile carousel. */
+function makeSetActive(frames) {
+  let active = -1;
+  return (idx) => {
     if (idx === active) return;
     active = idx;
     frames.forEach((f, i) => {
       f.classList.toggle("is-active", i === idx);
       f.setAttribute("aria-selected", String(i === idx));
     });
-  }
+  };
+}
+
+/* >=768px: the pinned, scrubbed stage. buildActsTl owns the grammar and must
+   not change — titles cut at 0.02, shots cross-fade at 0.4s. */
+function startPinActs(shots, metas, frames, setActive, setJump) {
+  if (!hasGsap) return () => {};
+  gsap.set(shots, { opacity: 0 });
+  gsap.set(metas, { opacity: 0 });
+  gsap.set([shots[0], metas[0]], { opacity: 1 });
 
   const st = ScrollTrigger.create({
     trigger: ".feature-pin",
     start: "top top",
-    /* Shorter pin on touch: 3200px of scroll-jacking is a lot of travel on a
-       phone for a stacked stage — 900 keeps the scrub 1:1 without the hike. */
-    end: () => (isDesktop() ? "+=3200" : "+=900"),
+    /* Desktop only — below 768px the acts are a swipe carousel (see
+       startActCarousel), so phones get no pin and no scroll-jacking. */
+    end: "+=3200",
     pin: true,
     scrub: 0.6,
     anticipatePin: 1,
@@ -632,16 +633,77 @@ function initActs() {
     animation: buildActsTl(shots, metas),
   });
 
-  frames.forEach((f) => {
-    f.addEventListener("click", () => {
-      const i = Number(f.dataset.act);
-      const t = (i + 0.45) / shots.length;
-      const y = st.start + (st.end - st.start) * t;
-      window.scrollTo({ top: y, behavior: prefersReduced ? "auto" : "smooth" });
-    });
+  setJump((i) => {
+    const t = (i + 0.45) / shots.length;
+    const y = st.start + (st.end - st.start) * t;
+    window.scrollTo({ top: y, behavior: prefersReduced ? "auto" : "smooth" });
   });
 
-  return st;
+  return () => {
+    st.kill();
+    gsap.set([...shots, ...metas], { clearProps: "opacity" });
+    ScrollTrigger.refresh();
+  };
+}
+
+/* <=767px: a swipe carousel of paired slides. Pure CSS scroll-snap does the
+   gesture; this only drives the scrubber highlight and jump-to-act. One
+   passive scroll listener — no rAF loop. */
+function startActCarousel(slides, frames, setActive, setJump) {
+  const track = document.getElementById("act-track");
+  if (!track || !slides.length) return () => {};
+
+  function paint() {
+    const centre = track.scrollLeft + track.clientWidth / 2;
+    let idx = 0;
+    for (let i = 0; i < slides.length; i++) {
+      const s = slides[i];
+      if (s.offsetLeft <= centre) idx = i;
+    }
+    setActive(idx);
+  }
+
+  setJump((i) => {
+    const s = slides[i];
+    if (s) s.scrollIntoView({ inline: "start", block: "nearest", behavior: prefersReduced ? "auto" : "smooth" });
+  });
+
+  track.addEventListener("scroll", paint, { passive: true });
+  paint();
+
+  return () => {
+    track.removeEventListener("scroll", paint);
+    track.scrollLeft = 0;
+  };
+}
+
+/* One entry point so the breakpoint swap can tear one mode down before
+   starting the other — no duplicate listeners across resizes (AGENTS rule). */
+function initActsMode() {
+  const track = document.getElementById("act-track");
+  const slides = track ? Array.from(track.querySelectorAll(".act-slide")) : [];
+  const shots = Array.from(document.querySelectorAll(".act-shot"));
+  const metas = Array.from(document.querySelectorAll(".act-meta"));
+  const frames = Array.from(document.querySelectorAll(".scrub-frame"));
+  if (shots.length < 2) return;
+
+  const setActive = makeSetActive(frames);
+  let jump = () => {};
+  frames.forEach((f) => f.addEventListener("click", () => jump(Number(f.dataset.act))));
+
+  let stop = null;
+  function apply() {
+    if (stop) { stop(); stop = null; }
+    stop = isDesktop()
+      ? startPinActs(shots, metas, frames, setActive, (fn) => { jump = fn; })
+      : startActCarousel(slides, frames, setActive, (fn) => { jump = fn; });
+    setActive(0);
+  }
+
+  const mq = window.matchMedia("(min-width: 768px)");
+  if (mq.addEventListener) mq.addEventListener("change", apply);
+  else if (mq.addListener) mq.addListener(apply);
+  apply();
 }
 
 function buildActsTl(shots, metas) {
@@ -693,19 +755,24 @@ function initReelIndex() {
   window.addEventListener("resize", () => { measure(); paint(); }, { passive: true });
 }
 
-function initReelScroll() {
-  const strip = document.getElementById("reel-strip");
-  const wrap = document.querySelector(".reel-wrap");
-  if (!strip || !wrap) return;
-  if (!isDesktop()) return;
+/* >=768px: the pinned, scrubbed storyscroll. Desktop only — below 768px the
+   Reel is a native swipe carousel and initReelIndex paints the frame index
+   from wrap.scrollLeft.
+
+   OWNERSHIP: this is the only tween allowed to touch #reel-strip's transform.
+   initReelIntro animates .reel-wrap instead — an overwrite:true tween on the
+   strip here kills this scrub and strands the pin-spacer as dead scroll.
+
+   The returned stop() MUST kill the ScrollTrigger, not just the tween: a pin
+   created at desktop width and left live after shrinking to a phone is exactly
+   the stale pin-spacer that opens a ~950px black band after the Reel. */
+function startReelPin(strip, wrap) {
+  if (!hasGsap) return () => {};
 
   const amount = () => -(strip.scrollWidth - wrap.clientWidth);
-  if (Math.abs(amount()) < 24) return;
+  if (Math.abs(amount()) < 24) return () => {};
 
-  /* OWNERSHIP: this is the only tween allowed to touch #reel-strip's transform.
-     initReelIntro animates .reel-wrap instead — an overwrite:true tween on the
-     strip here kills this scrub and strands the pin-spacer as dead scroll. */
-  gsap.to(strip, {
+  const tween = gsap.to(strip, {
     x: () => -(strip.scrollWidth - wrap.clientWidth),
     ease: "none",
     scrollTrigger: {
@@ -722,6 +789,35 @@ function initReelScroll() {
       },
     },
   });
+
+  return () => {
+    if (tween.scrollTrigger) tween.scrollTrigger.kill();
+    tween.kill();
+    gsap.set(strip, { clearProps: "transform" });
+    const total = wrap.querySelectorAll(".reel-card").length;
+    setReelIndexLabel(0, total);
+    ScrollTrigger.refresh();
+  };
+}
+
+/* One entry point so the breakpoint swap can tear the pin down before the
+   native carousel takes over. Mirrors initActsMode: each mode returns a stop()
+   and only one is live at a time — no stale pins, no duplicate listeners. */
+function initReelScrollMode() {
+  const strip = document.getElementById("reel-strip");
+  const wrap = document.querySelector(".reel-wrap");
+  if (!strip || !wrap) return;
+
+  let stop = null;
+  function apply() {
+    if (stop) { stop(); stop = null; }
+    stop = isDesktop() ? startReelPin(strip, wrap) : () => {};
+  }
+
+  const mq = window.matchMedia("(min-width: 768px)");
+  if (mq.addEventListener) mq.addEventListener("change", apply);
+  else if (mq.addListener) mq.addListener(apply);
+  apply();
 }
 
 /* ================= CREDITS ROLL ================= */
@@ -1016,6 +1112,56 @@ function initFrameView() {
   });
 }
 
+/* ================= REEL AUTO-DEVELOP (touch) ================= */
+
+/* Hover is gated to fine pointers, so on a phone the develop slate is otherwise
+   undiscoverable. This develops whichever card is most on screen, mirroring
+   bindGroup's one-at-a-time exclusivity.
+
+   A click takes ownership of a card (data-userToggled): bindGroup keeps full
+   control of it and auto-drive stands down entirely until it leaves the
+   viewport. So auto-reveal can never re-open something the visitor just
+   closed, and never close something they just opened.
+
+   Deliberately no `once: true` and no extra scroll listener (initReelIndex
+   already owns that one) — IntersectionObserver is its own trigger. */
+function initReelAutoDevelop() {
+  if (finePointer) return;
+  const cards = Array.from(document.querySelectorAll(".develop-card"));
+  if (cards.length < 2 || typeof IntersectionObserver === "undefined") return;
+
+  const ratio = new Map();
+  cards.forEach((c) => ratio.set(c, 0));
+
+  function drive() {
+    if (cards.some((c) => c.dataset.userToggled)) return;
+    let best = null;
+    let bestRatio = 0;
+    ratio.forEach((r, card) => {
+      if (r > bestRatio) { bestRatio = r; best = card; }
+    });
+    cards.forEach((c) => {
+      const open = c === best && bestRatio > 0.55;
+      c.classList.toggle("is-open", open);
+      c.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      ratio.set(e.target, e.isIntersecting ? e.intersectionRatio : 0);
+      if (!e.isIntersecting) delete e.target.dataset.userToggled;
+    });
+    drive();
+  }, { threshold: [0, 0.25, 0.55, 0.8, 1] });
+
+  cards.forEach((c) => {
+    c.addEventListener("click", () => { c.dataset.userToggled = "1"; }, true);
+    io.observe(c);
+  });
+  drive();
+}
+
 /* ================= INIT ================= */
 
 function init() {
@@ -1032,15 +1178,24 @@ function init() {
   initMarquee();
   initFrameView();
 
+  /* Pins first, then the reveal triggers that must fire around them (the Reel
+     intro is documented to fire before its pin engages). Not gated on
+     motionOn: the acts carousel is pure CSS scroll-snap and must work even
+     when GSAP is missing (startPinActs/startReelPin no-op then), and the Reel
+     pin must be tear-down-able across the 768px boundary regardless. Only
+     reduced motion is excluded, which is what AGENTS requires. */
+  if (!prefersReduced) {
+    initActsMode();
+    initReelScrollMode();
+  }
   if (motionOn) {
-    initActs();
-    initReelScroll();
     initCreditsRoll();
     initReelIntro();
     initScrollReveals();
     bindRevealSweep();
     ScrollTrigger.refresh();
   }
+  initReelAutoDevelop();
 
   /* Measure last: ScrollTrigger inserts pin-spacers for the acts and the reel,
      which push every section below them down the page. Measuring before that

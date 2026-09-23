@@ -25,8 +25,8 @@ HTTP server is closer to production.
 |---|---|---|
 | 00 | Cold Open | Title cards, rating gag, timecode starts ticking |
 | 01 | Logline | Clapperboard slate, hover-reveal portrait, margin notes |
-| 02 | The Feature Presentation | Six pinned acts — titles *cut*, shots *cross-fade* |
-| 03 | The Reel | Horizontal filmstrip, contact-sheet cards **develop** on hover |
+| 02 | The Feature Presentation | Six acts — swipe carousel on mobile, pinned stage on desktop (titles *cut*, shots *cross-fade*) |
+| 03 | The Reel | Horizontal filmstrip, contact-sheet cards **develop** on hover / auto on touch |
 | 04 | Call Sheet | Production table, rows expand with notes from set |
 | 05 | Gear List | Crew gear list + credit-roll marquee |
 | 06 | End Credits | Scroll-driven credit roll → "Want in on the next one?" |

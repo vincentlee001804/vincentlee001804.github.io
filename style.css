@@ -797,43 +797,78 @@ html.motion-on .feature-pin > .max-w-6xl {
   max-width: 52ch;
 }
 
-/* motion-on screening stage.
-   Shot sits above the meta by default (mobile). At md+ it becomes two columns:
-   shot left (capped at 56vh so the pinned block fits the viewport), meta right.
-   Shots cross-fade in their cell, titles cut in theirs. */
-html.motion-on .feature-stage {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
+/* motion-on screening stage — three modes:
+   (a) default / reduced-motion / no JS: .act-track is a vertical stack of six
+       complete acts (shot + its meta) — see the static block later in the file.
+   (b) >=768px: the pinned, scrubbed stage. .act-track and .act-slide become
+       display: contents so each shot and meta drops back into .feature-stage's
+       two-column grid, explicitly placed so all six shots stack in the left
+       cell and all six metas in the right. Shots cross-fade in their cell,
+       titles cut in theirs.
+   (c) <=767px: a swipe carousel of paired slides. No pin, so there is nothing
+       to cut or cross-fade between — the cut/cross-fade grammar belongs to (b).
+       Scroll container is mandatory: an ungated max-content row would be
+       clipped by body { overflow-x: hidden } and its slides unreachable. */
 @media (min-width: 768px) {
   html.motion-on .feature-stage {
+    display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: 2.5rem;
     align-items: center;
   }
+  html.motion-on .act-track,
+  html.motion-on .act-slide {
+    display: contents;
+  }
+  html.motion-on .act-shot {
+    grid-column: 1;
+    grid-row: 1;
+    opacity: 0;
+  }
+  html.motion-on .act-meta {
+    grid-column: 2;
+    grid-row: 1;
+    opacity: 0;
+  }
+  html.motion-on .act-shot.is-first,
+  html.motion-on .act-meta.is-first {
+    opacity: 1;
+  }
+  html.motion-on .act-block {
+    border-left: 0;
+    padding-left: 0;
+  }
 }
-html.motion-on .acts-frame {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  /* Gated exactly like the Reel carousel (see .reel-wrap below): the acts
+     carousel is pure CSS scroll-snap and must not depend on html.motion-on,
+     or a GSAP hiccup drops mobile to the static vertical stack of all six
+     acts — a long document that reads as a desktop page. The child selectors
+     out-specify the static .act-track/.act-slide rules further down. */
+  .feature-stage > .act-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1.5rem;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* trailing room so the last slide can reach its snap position under
+       scroll-snap-type: mandatory (otherwise it is clamped mid-peek) */
+    padding-right: calc(100vw - 1.5rem - min(86vw, 420px));
+  }
+  .feature-stage > .act-track::-webkit-scrollbar { display: none; }
+  .feature-stage > .act-track > .act-slide {
+    flex: 0 0 min(86vw, 420px);
+    scroll-snap-align: start;
+    /* fast flicks land one slide at a time — no skipped acts */
+    scroll-snap-stop: always;
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
 }
-html.motion-on .act-shot {
-  grid-area: 1 / 1;
-  opacity: 0;
-}
-html.motion-on .act-shot.is-first { opacity: 1; }
-html.motion-on .acts-slate {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  margin-top: 0;
-}
-html.motion-on .act-meta {
-  grid-area: 1 / 1;
-  opacity: 0;
-}
-html.motion-on .act-meta.is-first { opacity: 1; }
 /* Act V's pair collapses into one aperture and fades through ink. motion-on is
    only set when GSAP loaded AND prefers-reduced-motion is not reduce, so the
    loop can never run for a reduced-motion visitor or on a GSAP failure. Both
@@ -1014,24 +1049,21 @@ html.motion-on .act-shot-stack .act-still-b {
   html.motion-on .reel-index { display: block; }
 }
 
-/* static (default / reduced motion / no JS): storyboard grid + act log */
-.acts-frame {
+/* static (default / reduced motion / no JS): a vertical stack of six complete
+   acts — each shot paired with its meta, in plain document order. Same content
+   as the pinned stage and the swipe carousel, just laid out in one column. */
+.act-track {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+}
+.act-slide {
+  display: grid;
   gap: 1rem;
 }
-@media (min-width: 768px) {
-  .acts-frame { grid-template-columns: repeat(3, 1fr); }
-}
 .act-shot { border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
-.acts-slate { display: grid; gap: 1.75rem; margin-top: 2.5rem; }
 .act-block {
   border-left: 2px solid var(--line);
   padding-left: 1.1rem;
-}
-html.motion-on .act-block {
-  border-left: 0;
-  padding-left: 0;
 }
 
 /* ---- act scrubber ---- */
@@ -1468,6 +1500,14 @@ html.motion-on .credits-window {
   background: var(--ink);
   position: relative;
   z-index: 1;
+  /* One device screen, centred column — must work with the Tailwind Play CDN
+     disabled, so max-w-3xl/mx-auto/px-6/text-center live here and not only in
+     utility classes. margin-inline:auto centres it even under the motion-on
+     inset: 0 below (left:0 + right:0 + max-width + auto margins = centred). */
+  max-width: 42rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  text-align: center;
 }
 html.motion-on .credits-final {
   position: absolute;
@@ -1740,10 +1780,37 @@ html.motion-on .frame-view.is-open .frame-view-index {
 }
 
 /* ---- section rhythm ---- */
-/* Tailwind's min-h-screen is 100vh — the collapsing toolbar overshoots it. */
+/* One-screen hero. Everything that makes it "full page on the device screen"
+   lives here — the Tailwind Play CDN is a runtime JIT and until it lands (or
+   if it never does) the hero would otherwise paint as a plain top-aligned
+   block and read as an unstyled desktop-width document. */
 #cold-open {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.cold-open-inner {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  padding-block: clamp(3.5rem, 8vh, 6rem);
+}
+/* Fits the whole title block into one 956px phone screen and centres it. */
+@media (max-width: 767px) {
+  .cold-open-inner { padding-block: 3rem 4rem; }
+  #cold-open h1 { font-size: clamp(3rem, 13vw, 9rem); }
+  #cold-open .mb-10 { margin-bottom: 1.25rem; }
+  #cold-open .mb-8 { margin-bottom: 1.1rem; }
+  #cold-open .mb-6 { margin-bottom: 1rem; }
+  #cold-open .mb-4 { margin-bottom: 0.65rem; }
+  #cold-open .mb-3 { margin-bottom: 0.5rem; }
+  #cold-open .gap-4 { gap: 0.75rem; }
 }
 .cut {
   position: relative;
