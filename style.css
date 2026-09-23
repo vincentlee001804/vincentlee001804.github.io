@@ -13,12 +13,37 @@
   --code: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
 }
 
-html { scroll-behavior: smooth; }
+/* ===== Preflight fallbacks + layout utility safety net =====
+   The Tailwind Play CDN is a runtime JIT compiler: on a phone it can arrive
+   seconds late or never, and until it does NOTHING here may depend on it.
+   These rules are ours, not the CDN's. The utility values match Tailwind's
+   exactly (max-w-6xl = 72rem etc.) so a loaded CDN is a no-op, not a conflict.
+
+   Without them the section shells — which are max-w-*/mx-auto/px-6 utility
+   classes — lose their width cap, their centring and their gutters all at
+   once, and the whole page collapses into a left-anchored column with dead
+   space on the right. */
+*, *::before, *::after { box-sizing: border-box; }
+img, video { max-width: 100%; height: auto; }
+
+.max-w-2xl { max-width: 42rem; }
+.max-w-3xl { max-width: 48rem; }
+.max-w-5xl { max-width: 64rem; }
+.max-w-6xl { max-width: 72rem; }
+.mx-auto  { margin-inline: auto; }
+.px-6     { padding-inline: 1.5rem; }
+.w-full   { width: 100%; }
+
+html { scroll-behavior: smooth; max-width: 100%; }
 
 body {
   font-family: var(--body);
   background: var(--ink);
   color: var(--bone);
+  margin: 0;
+  max-width: 100%;
+  /* body only — overflow-x: hidden on html would break position: sticky on
+     .credits-sticky (the end-card roll). */
   overflow-x: hidden;
 }
 
@@ -697,18 +722,26 @@ html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out inf
 
 /* Pinned act frame: full-viewport letterbox with the shot optically centred
    in the aperture between the bars. Without this the frame is content-height
-   and top-aligned, leaving dead space below the scrubber. */
-html.motion-on .feature-pin {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-html.motion-on .feature-pin > .max-w-6xl {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+   and top-aligned, leaving dead space below the scrubber.
+   DESKTOP ONLY (>=768px): on phones there is no pin — making .feature-pin a
+   flex column puts the content wrapper in min-width:auto, whose min-content
+   is the scrub strip; that min-content (wider than any phone) blows the
+   wrapper out to ~891px, and the %-based carousel + full-bleed track then
+   resolve against that width instead of the viewport. The min-height:100dvh
+   centring also opens dead bands above/below the carousel on mobile. */
+@media (min-width: 768px) {
+  html.motion-on .feature-pin {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  html.motion-on .feature-pin > .max-w-6xl {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 }
 
 /* ---- act stage ---- */
@@ -846,6 +879,13 @@ html.motion-on .feature-pin > .max-w-6xl {
      acts — a long document that reads as a desktop page. The child selectors
      out-specify the static .act-track/.act-slide rules further down. */
   .feature-stage > .act-track {
+    /* FULL-BLEED: the carousel must span the viewport, not the content
+       column it is nested in. Negative margin matching the parent's px-6
+       gutter is the vw-free breakout idiom — 100vw includes any scrollbar and
+       can push past the box, and mixing % of a parent with vw in one calc()
+       is a width-circularity bug. */
+    margin-inline: -1.5rem;
+    padding-inline: 1.5rem;
     display: flex;
     gap: 1rem;
     overflow-x: auto;
@@ -854,13 +894,29 @@ html.motion-on .feature-pin > .max-w-6xl {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    /* trailing room so the last slide can reach its snap position under
-       scroll-snap-type: mandatory (otherwise it is clamped mid-peek) */
-    padding-right: calc(100vw - 1.5rem - min(86vw, 420px));
   }
   .feature-stage > .act-track::-webkit-scrollbar { display: none; }
+  /* Trailing room so the LAST slide's `start` edge can reach
+     scroll-padding-inline under scroll-snap-type: mandatory (otherwise it is
+     clamped mid-peek). Sized in the SAME unit as the cards — % of the flex
+     container's content box — so the two can never disagree. Peek (22%) plus
+     slack. */
+  .feature-stage > .act-track::after {
+    content: "";
+    flex: 0 0 25%;
+  }
   .feature-stage > .act-track > .act-slide {
-    flex: 0 0 min(86vw, 420px);
+    /* Longhands + explicit width: min() inside the `flex` SHORTHAND is a parse
+       fragility — if the declaration is dropped the slide falls back to
+       flex: 0 1 auto (content width) and several cards cram into one row
+       instead of one card + peek. Percent of the TRACK (the slide's own flex
+       container), never vw — the card can then never overflow its parent at
+       any viewport, and 78% leaves a 22% peek of the next act. */
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 78%;
+    width: 78%;
+    min-width: 0;
     scroll-snap-align: start;
     /* fast flicks land one slide at a time — no skipped acts */
     scroll-snap-stop: always;
@@ -1002,11 +1058,18 @@ html.motion-on .act-shot-stack .act-still-b {
     width: max-content;
     gap: 1rem;
     /* trailing room so the last frame can reach its snap position under
-       scroll-snap-type: mandatory (otherwise it is clamped mid-peek) */
-    padding-right: calc(100vw - 1.5rem - min(78vw, 320px));
+       scroll-snap-type: mandatory (otherwise it is clamped mid-peek).
+       100% not 100vw — vw includes any scrollbar and can push past the box. */
+    padding-right: calc(100% - 1.5rem - min(78vw, 320px));
   }
   .reel-card {
+    /* Longhands + explicit width — see the act-slide note above: min() in the
+       flex shorthand can be dropped, collapsing the peek into a cramped row. */
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: min(78vw, 320px);
     width: min(78vw, 320px);
+    min-width: 0;
     scroll-snap-align: start;
     /* fast flicks land one frame at a time — no skipped frames */
     scroll-snap-stop: always;
@@ -1515,9 +1578,12 @@ html.motion-on .credits-final {
   z-index: 1;
   min-height: 0;
   padding: 0 1.5rem;
-  /* opacity only — never display/visibility — so the end card stays in the
-     accessibility tree the whole time it is waiting for its cue */
-  opacity: 0;
+  /* NO opacity here. This card must be visible by default in CSS — only
+     initCreditsRoll may hide it, and only after it has committed to building
+     the timeline. An opacity: 0 in CSS is a trap: if that function bails
+     (short roll) or GSAP is missing, the end card stays invisible forever and
+     the section reads as a black gap. Opacity only — never display/visibility —
+     so the end card stays in the accessibility tree while it waits for its cue. */
 }
 /* Sighted keyboard users tabbing to a CTA must never hit an invisible control. */
 html.motion-on .credits-final:focus-within {

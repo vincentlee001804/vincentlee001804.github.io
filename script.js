@@ -826,10 +826,16 @@ function initCreditsRoll() {
   const list = document.getElementById("credits-list");
   const win = document.querySelector(".credits-window");
   const card = document.querySelector(".credits-final");
-  if (!list || !win) return;
+  /* card is guarded too: a missing node would make tl.to(card, …) a silent
+     no-op and leave the end card in whatever state CSS left it in. */
+  if (!list || !win || !card) return;
 
   const travel = () => list.scrollHeight;
   if (travel() < win.clientHeight * 0.35) return;
+
+  /* Only now that the timeline is committed do we hide the end card. CSS
+     leaves it visible so a bail above can never trap it at opacity 0. */
+  gsap.set(card, { opacity: 0 });
 
   /* One scrubbed timeline over .credits-roll-track so the roll and the end
      card share a single pinned screen: the roll plays first and parks its tail
