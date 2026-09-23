@@ -1096,6 +1096,41 @@ function initFrameView() {
     });
   });
 
+  /* Touch rewrite: on coarse pointers the ⤢ trigger is hidden (style.css) and
+     the reveal is auto-driven (initReelAutoDevelop), so a tap must NOT toggle
+     the reveal — it opens the full frame instead. Capturing on the strip
+     stops the event before it reaches the card: bindGroup never sees an
+     open/close click, and auto-develop's userToggled handoff never fires, so
+     auto-drive stays in charge of the reveal. Links inside the developed
+     slate still navigate normally; cards without a real image ("More in the
+     can") keep their toggle. Enter/Space on a focused card synthesizes a
+     click, which this same capture path turns into "open". */
+  if (!finePointer) {
+    const stripEl = document.getElementById("reel-strip");
+    if (stripEl) {
+      stripEl.addEventListener("click", (e) => {
+        if (e.target.closest("a")) return;
+        const card = e.target.closest(".develop-card");
+        if (!card) return;
+        const imgEl = card.querySelector(".develop-media img");
+        if (!imgEl) return;
+        const i = frames.findIndex((f) => f.src === imgEl.getAttribute("src"));
+        if (i < 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        open(i);
+      }, true);
+      /* The card's static label says "reveal details" — on touch it opens the
+         full frame now, so keep the accessible name honest. */
+      stripEl.querySelectorAll(".develop-card").forEach((card) => {
+        const imgEl = card.querySelector(".develop-media img");
+        if (!imgEl) return;
+        const f = frames.find((fr) => fr.src === imgEl.getAttribute("src"));
+        if (f) card.setAttribute("aria-label", `${f.name} — view full frame`);
+      });
+    }
+  }
+
   view.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", close));
   const prev = view.querySelector(".fv-prev");
   const next = view.querySelector(".fv-next");

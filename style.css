@@ -1045,9 +1045,12 @@ html.motion-on .act-shot-stack .act-still-b {
   border-color: rgba(240, 162, 2, 0.55);
   background: rgba(20, 20, 26, 0.95);
 }
-@media (max-width: 767px) {
-  /* thumbs need ~44px */
-  .frame-expand { width: 2.75rem; height: 2.75rem; }
+@media (max-width: 767px) and (pointer: coarse) {
+  /* On touch the card itself is the full-frame trigger (initFrameView) and
+     the reveal is auto-driven, so ⤢ is a duplicate target sitting on top of
+     the developed slate — remove it. Fine-pointer narrow windows (a mouse
+     resized small) keep the button AND the reveal toggle. */
+  .frame-expand { display: none; }
 }
 /* Below 768px the strip is a swipe carousel (peek + snap): .reel-wrap is a real
    overflow-x scroll container so every frame stays reachable by touch. An
@@ -1084,6 +1087,13 @@ html.motion-on .act-shot-stack .act-still-b {
     scroll-snap-align: start;
     /* fast flicks land one frame at a time — no skipped frames */
     scroll-snap-stop: always;
+  }
+  /* Same end-card treatment as the acts: the last frame ("More in the can")
+     has no next card to peek, so a start-snap leaves a dead black band on
+     the right — snapping it CENTRED splits the leftover evenly and reads as
+     an intentional end card. */
+  .reel-strip > .reel-card:last-child {
+    scroll-snap-align: center;
   }
 }
 @media (min-width: 768px) {
