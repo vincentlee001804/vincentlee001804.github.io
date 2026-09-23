@@ -1,0 +1,1810 @@
+/* ===== Director's Cut — cinematic theme ===== */
+
+:root {
+  --ink: #0b0b0e;
+  --panel: #14141a;
+  --bone: #e8e4d9;
+  --safelight: #f0a202;
+  --teal: #2dd4bf;
+  --mute: #6b6b76;
+  --line: #26262e;
+  --display: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
+  --body: "Inter", system-ui, -apple-system, sans-serif;
+  --code: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--ink);
+  color: var(--bone);
+  overflow-x: hidden;
+}
+
+.font-mono { font-family: var(--code); }
+.font-title {
+  font-family: var(--display);
+  letter-spacing: 0.045em;
+  line-height: 0.95;
+}
+
+::selection { background: rgba(240, 162, 2, 0.35); color: var(--bone); }
+
+/* ---- blinking block cursor ---- */
+.cursor-blink {
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+:focus-visible {
+  outline: 2px solid var(--safelight);
+  outline-offset: 3px;
+}
+
+/* ---- film chrome: grain + vignette ---- */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 90;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+html.motion-on .grain { animation: grain-jitter 0.6s steps(4) infinite; }
+@keyframes grain-jitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, 1%); }
+  50% { transform: translate(1%, -2%); }
+  75% { transform: translate(-1%, 2%); }
+  100% { transform: translate(2%, -1%); }
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 89;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ---- light leak ---- */
+.light-leak {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.light-leak::before {
+  content: "";
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  top: -20%;
+  right: -15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 162, 2, 0.18), transparent 62%);
+  filter: blur(30px);
+}
+.light-leak::after {
+  content: "";
+  position: absolute;
+  width: 45vmax;
+  height: 45vmax;
+  bottom: -25%;
+  left: -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.13), transparent 62%);
+  filter: blur(30px);
+}
+/* A real light leak drifts and swells — it is a lens artifact moving with the
+   gate. transform + opacity ONLY: the blur above is static so it is never
+   repainted. Each blob drifts INWARD (they are anchored off-canvas and
+   .light-leak clips at overflow:hidden — outward travel would just dim them).
+   Amplitudes are sized to be clearly visible: a 60vmax blob translating 16%
+   travels ~185px at 1920 wide. The two loops are different lengths so the pair
+   never re-syncs and one of them is always mid-swing — it cannot read as a
+   visible loop. 0% == 100% on both = seamless ping-pong. */
+@keyframes leak-drift-a {
+  0%   { transform: translate(0, 0)      scale(1);    opacity: 1; }
+  50%  { transform: translate(-16%, 12%) scale(1.22); opacity: 0.45; }
+  100% { transform: translate(0, 0)      scale(1);    opacity: 1; }
+}
+@keyframes leak-drift-b {
+  0%   { transform: translate(0, 0)      scale(1.1);  opacity: 0.6; }
+  50%  { transform: translate(18%, -13%) scale(0.85); opacity: 1; }
+  100% { transform: translate(0, 0)      scale(1.1);  opacity: 0.6; }
+}
+html.motion-on .light-leak::before { animation: leak-drift-a 11s ease-in-out infinite; }
+html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out infinite; }
+
+/* ---- timecode HUD ---- */
+.hud-timecode {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 95;
+  font-family: var(--code);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--safelight);
+  background: rgba(11, 11, 14, 0.72);
+  border: 1px solid rgba(240, 162, 2, 0.35);
+  border-radius: 4px;
+  padding: 0.35rem 0.65rem;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+/* Phone: the fixed chip floats over content and the home indicator. The
+   section kickers already carry the timecode in the copy — hide the chip
+   below 768px (initHud also idles its listeners there). */
+@media (max-width: 767px) {
+  .hud-timecode { display: none; }
+}
+.hud-timecode .hud-rec {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--safelight);
+  margin-right: 0.45rem;
+  vertical-align: 0.05em;
+  animation: pulse 1.4s step-end infinite;
+}
+@keyframes pulse { 50% { opacity: 0.15; } }
+
+/* ---- viewfinder cursor (desktop only) ---- */
+.cursor-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  /* Topmost layer, always. html.has-cursor * sets cursor:none, so if anything
+     ever paints over this the pointer vanishes outright — that happened when
+     the full-frame viewer landed at z-index 120. Keep this above every overlay. */
+  z-index: 130;
+  opacity: 0;
+  transition: width 0.22s ease, height 0.22s ease, opacity 0.2s ease;
+  will-change: transform;
+}
+.cursor-view .cv {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-color: var(--safelight);
+  border-style: solid;
+  opacity: 0;
+  transition: all 0.22s ease;
+}
+.cursor-view .cv-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--safelight);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.18s ease, transform 0.22s ease;
+}
+.cv-tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
+.cv-tr { top: 0; right: 0; border-width: 1px 1px 0 0; }
+.cv-bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+.cv-br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+.cursor-view.is-live { opacity: 1; }
+.cursor-view.is-framed { width: 58px; height: 58px; }
+.cursor-view.is-framed .cv {
+  width: 11px;
+  height: 11px;
+  border-color: var(--teal);
+  opacity: 1;
+}
+.cursor-view.is-framed .cv-dot {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
+@media (hover: hover) and (pointer: fine) {
+  html.has-cursor,
+  html.has-cursor * { cursor: none !important; }
+}
+
+/* ---- slate buttons ---- */
+.slate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--code);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.8rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--bone);
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  will-change: transform;
+}
+.slate-btn::before,
+.slate-btn::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--line);
+  top: -1px;
+  bottom: -1px;
+  width: 2px;
+  transition: background 0.25s ease;
+}
+.slate-btn::before { left: -1px; }
+.slate-btn::after { right: -1px; }
+.slate-btn:hover {
+  border-color: var(--safelight);
+  color: var(--safelight);
+  box-shadow: 0 0 24px rgba(240, 162, 2, 0.18);
+}
+.slate-btn:hover::before,
+.slate-btn:hover::after { background: var(--safelight); }
+.slate-btn:active { transform: scale(0.97); }
+.slate-btn-primary {
+  border-color: rgba(240, 162, 2, 0.55);
+  color: var(--ink);
+  background: var(--safelight);
+}
+.slate-btn-primary:hover {
+  color: var(--ink);
+  background: #ffb51f;
+  box-shadow: 0 0 32px rgba(240, 162, 2, 0.35);
+}
+
+/* ---- status chip ---- */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--code);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: rgba(45, 212, 191, 0.07);
+  border-radius: 2px;
+  padding: 0.4rem 0.85rem;
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px var(--teal);
+  animation: pulse 2s step-end infinite;
+}
+
+/* ---- rating card (cold open gag) ---- */
+.rating-card {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid var(--line);
+  background: rgba(20, 20, 26, 0.9);
+  padding: 0.55rem 0.9rem;
+  border-radius: 2px;
+  font-family: var(--code);
+  text-align: left;
+}
+.rating-card .rc-glyph {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  color: var(--bone);
+  line-height: 1;
+}
+.rating-card .rc-text {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+
+/* ---- kicker + section titles ---- */
+.kicker {
+  font-family: var(--code);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--safelight);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.kicker::before { content: "> "; color: var(--mute); }
+
+/* ---- image slots (empty, awaiting drop-in) ---- */
+.img-slot {
+  position: relative;
+  width: 100%;
+  border: 1px dashed rgba(240, 162, 2, 0.4);
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(45deg, rgba(240, 162, 2, 0.03) 0 8px, transparent 8px 16px),
+    var(--panel);
+  overflow: hidden;
+}
+.img-slot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.07;
+  pointer-events: none;
+}
+.img-slot-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+  padding: 1rem;
+  font-family: var(--code);
+}
+.img-slot-tag {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  letter-spacing: 0.14em;
+  color: rgba(232, 228, 217, 0.5);
+}
+.img-slot-file {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--safelight);
+  word-break: break-all;
+}
+.img-slot-ratio {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+.img-slot-corners {
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+}
+.img-slot-corners::before,
+.img-slot-corners::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(240, 162, 2, 0.5);
+  border-style: solid;
+}
+.img-slot-corners::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+.img-slot-corners::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* ---- clapperboard slate ---- */
+.clapper {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.clapper-stripe {
+  height: 22px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--bone) 0 12px,
+    var(--ink) 12px 24px
+  );
+  opacity: 0.85;
+}
+.clapper-body { padding: 1.1rem 1.2rem; }
+.clapper-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--line);
+  font-family: var(--code);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.clapper-row:last-child { border-bottom: 0; }
+.clapper-row .k { color: var(--mute); }
+.clapper-row .v { color: var(--bone); text-align: right; }
+.clapper-row .v.hl { color: var(--teal); }
+
+/* ---- fact chips ---- */
+.fact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--code);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--bone);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.4rem 0.75rem;
+  background: var(--panel);
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.fact-chip:hover { border-color: var(--safelight); color: var(--safelight); }
+
+/* ---- develop cards (hover-reveal contact sheets) ---- */
+.develop-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.develop-card:focus-within:not(.is-collapsed),
+.develop-card.is-open {
+  border-color: rgba(240, 162, 2, 0.55);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 28px rgba(240, 162, 2, 0.1);
+}
+.develop-media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+}
+.develop-media .img-slot {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  aspect-ratio: auto;
+}
+.develop-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) blur(3px) contrast(0.9) brightness(0.8);
+  transform: scale(1.04);
+  transition: filter 0.55s ease, transform 0.55s ease;
+}
+.develop-card:focus-within:not(.is-collapsed) .develop-media img,
+.develop-card.is-open .develop-media img {
+  filter: grayscale(0) blur(0) contrast(1) brightness(1);
+  transform: scale(1);
+}
+.develop-media .img-slot {
+  filter: grayscale(1) blur(3px) contrast(0.9) brightness(0.75);
+  transform: scale(1.04);
+  transition: filter 0.55s ease, transform 0.55s ease;
+}
+.develop-card:focus-within:not(.is-collapsed) .develop-media .img-slot,
+.develop-card.is-open .develop-media .img-slot {
+  filter: grayscale(0) blur(0) contrast(1) brightness(1);
+  transform: scale(1);
+  border-color: transparent;
+}
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(232, 228, 217, 0.14) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+}
+.develop-card:focus-within:not(.is-collapsed) .sheen,
+.develop-card.is-open .sheen {
+  transform: translateX(120%);
+  transition: transform 0.75s ease;
+}
+
+.develop-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--code);
+}
+.develop-label .frame-num {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  color: var(--safelight);
+}
+.develop-label .frame-name {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  color: var(--bone);
+}
+
+.develop-slate {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.1rem 1rem 1rem;
+  background: linear-gradient(to top, rgba(11, 11, 14, 0.97) 55%, rgba(11, 11, 14, 0.85) 80%, transparent);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.develop-card:focus-within:not(.is-collapsed) .develop-slate,
+.develop-card.is-open .develop-slate {
+  opacity: 1;
+  transform: translateY(0);
+}
+.slate-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--code);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 0.4rem;
+}
+.develop-slate h3 {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--bone);
+  margin-bottom: 0.3rem;
+}
+.signal-line {
+  font-family: var(--code);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: var(--teal);
+  line-height: 1.6;
+  margin-bottom: 0.65rem;
+  word-break: break-word;
+}
+.signal-line .sig-arrow { color: var(--mute); }
+.slate-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+}
+.chip {
+  font-family: var(--code);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--mute);
+}
+.chip-award {
+  color: var(--safelight);
+  border-color: rgba(240, 162, 2, 0.45);
+  background: rgba(240, 162, 2, 0.08);
+}
+.chip-teal { color: var(--teal); border-color: rgba(45, 212, 191, 0.4); }
+.slate-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--code);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--safelight);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(240, 162, 2, 0.35);
+  padding-bottom: 0.1rem;
+}
+.slate-link:hover { color: var(--bone); border-color: var(--bone); }
+
+/* ---- "more in the can" contact sheet ---- */
+.can-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 2px;
+  padding: 0.75rem;
+  overflow: hidden;
+}
+.can-item {
+  border: 1px solid var(--line);
+  background: rgba(11, 11, 14, 0.6);
+  padding: 0.55rem 0.5rem;
+  font-family: var(--code);
+  font-size: 0.56rem;
+  letter-spacing: 0.04em;
+  color: var(--mute);
+  line-height: 1.35;
+}
+.can-item strong {
+  display: block;
+  color: var(--bone);
+  font-weight: 500;
+  font-size: 0.6rem;
+  margin-bottom: 0.15rem;
+  word-break: break-word;
+}
+
+/* ---- sprocket holes (reel strip) ---- */
+.sprockets {
+  height: 18px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0 14px,
+      rgba(232, 228, 217, 0.12) 14px 28px,
+      transparent 28px 42px
+    ),
+    var(--panel);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.sprockets::after {
+  content: "";
+  position: absolute;
+  inset: 5px 0;
+  background:
+    repeating-linear-gradient(
+      to right,
+      var(--ink) 0 10px,
+      transparent 10px 34px
+    );
+  opacity: 0.9;
+}
+
+/* ---- letterbox bars (acts) ---- */
+.letterbox-bar {
+  height: 48px;
+  background: var(--ink);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.letterbox-bar.bottom {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* Pinned act frame: full-viewport letterbox with the shot optically centred
+   in the aperture between the bars. Without this the frame is content-height
+   and top-aligned, leaving dead space below the scrubber. */
+html.motion-on .feature-pin {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+html.motion-on .feature-pin > .max-w-6xl {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ---- act stage ---- */
+.feature-stage {
+  position: relative;
+  width: 100%;
+}
+.act-shot {
+  position: relative;
+  width: 100%;
+}
+.act-shot .img-slot {
+  aspect-ratio: 16 / 9;
+  max-height: 56vh;
+  max-height: 56dvh;
+}
+/* Letterbox, never crop: sources keep their native ratio (4:3, 3:2, 16:9) and
+   sit inside a 16:9 ink gate. The bars are palette ink, so they read as the
+   film aperture rather than as a mistake. The ink lives on the container /
+   stack, never on a still — a still with an opaque background would paint a
+   plate over the layer beneath it the moment anything cross-fades. */
+.act-shot img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 56vh;
+  max-height: 56dvh;
+  object-fit: contain;
+}
+.act-shot {
+  background: var(--ink);
+}
+/* Act V holds two stills. Default (reduced-motion / no JS / no GSAP): they
+   read as a contact-sheet diptych, both visible. Under motion-on they stack
+   in one aperture and fade through ink — see the motion-on block below. */
+.act-shot-stack {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  background: var(--line);
+}
+.act-shot-stack .act-still {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: none;
+  object-fit: contain;
+  background: var(--ink);
+}
+/* Act V fades THROUGH the ink gate rather than cross-dissolving. The two
+   stills are a dark LED-wall stage shot and a bright kitchen shot, so any
+   intermediate alpha is an ugly double exposure — the classic grey ghost.
+   A dip to black then a rise is what an editor does between dissimilar
+   frames, and it composites nothing: at every instant you see exactly one
+   photo, or ink. Two symmetric dips per 8s cycle. Pace: 2.4s dwell per still,
+   0.64s dip, 0.32s black beat, 0.64s rise — snappy transition, real dwell. */
+@keyframes act-fade-a {
+  0%, 30%   { opacity: 1; }
+  38%, 92%  { opacity: 0; }
+  100%      { opacity: 1; }
+}
+@keyframes act-fade-b {
+  0%, 42%   { opacity: 0; }
+  50%, 80%  { opacity: 1; }
+  88%, 100% { opacity: 0; }
+}
+.act-meta { width: 100%; }
+.act-num {
+  font-family: var(--code);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: var(--safelight);
+  text-transform: uppercase;
+}
+.act-title {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  letter-spacing: 0.05em;
+  color: var(--bone);
+}
+.act-desc {
+  color: var(--mute);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  max-width: 52ch;
+}
+
+/* motion-on screening stage.
+   Shot sits above the meta by default (mobile). At md+ it becomes two columns:
+   shot left (capped at 56vh so the pinned block fits the viewport), meta right.
+   Shots cross-fade in their cell, titles cut in theirs. */
+html.motion-on .feature-stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  html.motion-on .feature-stage {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 2.5rem;
+    align-items: center;
+  }
+}
+html.motion-on .acts-frame {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+html.motion-on .act-shot {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+html.motion-on .act-shot.is-first { opacity: 1; }
+html.motion-on .acts-slate {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 0;
+}
+html.motion-on .act-meta {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+html.motion-on .act-meta.is-first { opacity: 1; }
+/* Act V's pair collapses into one aperture and fades through ink. motion-on is
+   only set when GSAP loaded AND prefers-reduced-motion is not reduce, so the
+   loop can never run for a reduced-motion visitor or on a GSAP failure. Both
+   layers share .act-still so they occupy one identical rect. */
+html.motion-on .act-shot-stack {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 56vh;
+  max-height: 56dvh;
+  background: var(--ink);
+}
+html.motion-on .act-shot-stack .act-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  background: none;
+}
+html.motion-on .act-shot-stack .act-still-a {
+  animation: act-fade-a 8s ease-in-out infinite;
+}
+html.motion-on .act-shot-stack .act-still-b {
+  opacity: 0;
+  animation: act-fade-b 8s ease-in-out infinite;
+}
+
+/* ---- Act VI ? slate (awaiting act-06.webp) ----
+   Same 16:9 ink aperture as the other acts so the stage never jumps. Dim on
+   purpose — it is an unfilled slot, not a title card. Replace the whole block
+   with <img src="assets/act-06.webp" alt="…"> once the still exists. */
+.act-slate-missing {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 56vh;
+  max-height: 56dvh;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+.act-slate-missing .asm-glyph {
+  font-family: var(--display);
+  font-size: clamp(3.5rem, 11vw, 7rem);
+  line-height: 0.9;
+  color: var(--line);
+  text-shadow: 0 0 42px rgba(232, 228, 217, 0.07);
+}
+.act-slate-missing .asm-tag {
+  font-family: var(--code);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--safelight);
+  opacity: 0.7;
+}
+
+/* ---- reel strip ---- */
+.reel-wrap {
+  position: relative;
+  width: 100%;
+}
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0 1.5rem;
+}
+.reel-card {
+  position: relative;
+  width: 100%;
+  flex: none;
+}
+/* Full-frame trigger. Sibling of .develop-card (which is role="button"), so it
+   must never be nested inside it. Stays clickable above the developed slate. */
+.frame-expand {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--code);
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--bone);
+  background: rgba(20, 20, 26, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.frame-expand:hover {
+  color: var(--safelight);
+  border-color: rgba(240, 162, 2, 0.55);
+  background: rgba(20, 20, 26, 0.95);
+}
+@media (max-width: 767px) {
+  /* thumbs need ~44px */
+  .frame-expand { width: 2.75rem; height: 2.75rem; }
+}
+/* Below 768px the strip is a swipe carousel (peek + snap): .reel-wrap is a real
+   overflow-x scroll container so every frame stays reachable by touch. An
+   ungated max-content row without that container would be clipped by
+   body { overflow-x: hidden } (content loss) — keep the scroll container.
+   reduced-motion keeps the static vertical stack of full-width frames. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .reel-wrap {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1.5rem;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .reel-wrap::-webkit-scrollbar { display: none; }
+  .reel-strip {
+    flex-direction: row;
+    width: max-content;
+    gap: 1rem;
+    /* trailing room so the last frame can reach its snap position under
+       scroll-snap-type: mandatory (otherwise it is clamped mid-peek) */
+    padding-right: calc(100vw - 1.5rem - min(78vw, 320px));
+  }
+  .reel-card {
+    width: min(78vw, 320px);
+    scroll-snap-align: start;
+    /* fast flicks land one frame at a time — no skipped frames */
+    scroll-snap-stop: always;
+  }
+}
+@media (min-width: 768px) {
+  html.motion-on .reel-strip {
+    flex-direction: row;
+    width: max-content;
+    padding: 0 max(1.5rem, calc((100vw - 72rem) / 2));
+  }
+  html.motion-on .reel-card {
+    width: min(78vw, 340px);
+  }
+}
+
+/* frame index (01 — 05): only shown where the strip is actually a horizontal
+   scroller — the mobile swipe carousel, or the desktop motion-on strip. */
+.reel-index {
+  display: none;
+  font-family: var(--code);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+  /* Bottom margin keeps the index clear of the following sprocket band — at
+     0 the film strip butted straight onto the frame counter. */
+  margin: 0.55rem 0 0.9rem;
+}
+.reel-swipe-hint { display: none; }
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+  .reel-index { display: block; }
+  .reel-swipe-hint { display: inline; }
+  /* tighter vertical rhythm on phones — the whole point of the carousel */
+  .reel-section { padding-top: 3rem; padding-bottom: 3rem; }
+  .reel-section .reel-wrap { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+}
+@media (min-width: 768px) {
+  html.motion-on .reel-index { display: block; }
+}
+
+/* static (default / reduced motion / no JS): storyboard grid + act log */
+.acts-frame {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .acts-frame { grid-template-columns: repeat(3, 1fr); }
+}
+.act-shot { border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.acts-slate { display: grid; gap: 1.75rem; margin-top: 2.5rem; }
+.act-block {
+  border-left: 2px solid var(--line);
+  padding-left: 1.1rem;
+}
+html.motion-on .act-block {
+  border-left: 0;
+  padding-left: 0;
+}
+
+/* ---- act scrubber ---- */
+.scrub-track {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.scrub-frame {
+  width: 42px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  background: var(--panel);
+  font-family: var(--code);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+.scrub-frame:hover { border-color: var(--mute); color: var(--bone); }
+@media (max-width: 767px) {
+  .scrub-track { gap: 0.35rem; }
+  .scrub-frame { width: 36px; height: 24px; font-size: 0.52rem; }
+  /* Visual box stays 36x24 per the breakpoint contract; the hit area grows
+     to ~56x44 so thumbs can actually hit the frames. */
+  .scrub-frame {
+    position: relative;
+  }
+  .scrub-frame::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
+}
+.scrub-frame.is-active {
+  border-color: var(--safelight);
+  color: var(--safelight);
+  background: rgba(240, 162, 2, 0.1);
+}
+
+/* ---- call sheet ---- */
+.call-table {
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.call-head-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.6fr 0.9fr 0.8fr;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--code);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mute);
+  background: rgba(11, 11, 14, 0.5);
+}
+.call-row { border-bottom: 1px solid var(--line); }
+.call-row:last-child { border-bottom: 0; }
+.call-row-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.3fr 1.6fr 0.9fr 0.8fr;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 1rem;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.25s ease;
+}
+.call-row.is-open .call-row-btn,
+.call-row:focus-within:not(.is-collapsed) .call-row-btn {
+  background: rgba(240, 162, 2, 0.05);
+}
+.call-prod {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  color: var(--bone);
+}
+.call-role { color: var(--bone); font-size: 0.9rem; }
+.call-dates,
+.call-loc {
+  font-family: var(--code);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+}
+.call-notes {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+.call-notes > div { overflow: hidden; }
+.call-row.is-open .call-notes,
+.call-row:focus-within:not(.is-collapsed) .call-notes {
+  grid-template-rows: 1fr;
+}
+.call-notes ul {
+  margin: 0;
+  /* top padding keeps the first bullet clear of the row rule above it */
+  padding: 0.95rem 1rem 1.15rem 1.15rem;
+  list-style: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s;
+}
+.call-row.is-open .call-notes ul,
+.call-row:focus-within:not(.is-collapsed) .call-notes ul {
+  opacity: 1;
+  transform: translateY(0);
+}
+.call-notes li {
+  position: relative;
+  padding-left: 1.1rem;
+  margin-bottom: 0.45rem;
+  color: var(--mute);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.call-notes li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--safelight);
+  font-size: 0.7rem;
+  top: 0.25em;
+}
+.call-caret {
+  display: none;
+}
+
+/* mobile: the 4-column call sheet collapses to a 3-line card
+   (production / role / dates · location) and the column headers go away */
+@media (max-width: 767px) {
+  .call-head-row { display: none; }
+  .call-row-btn {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.85rem;
+  }
+  .call-prod,
+  .call-role { flex-basis: 100%; }
+  .call-dates,
+  .call-loc { flex: 0 0 auto; }
+}
+
+/* ---- gear list ---- */
+/* Base: a single column of units (mobile / no JS). At md+ .gear-grid becomes a
+   4-row grid with grid-auto-flow: column, so each column's three groups share
+   rows — AI/ML and TOOLS then start on the same line and the block ends flush
+   instead of leaving a gap under the shorter column.
+   Requires GEAR to stay 2 columns x 3 groups: 1 title + 3 units = 4 rows. */
+.gear-grid {
+  display: flex;
+  flex-direction: column;
+}
+.gear-col-title {
+  font-family: var(--code);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--safelight);
+  margin-bottom: 0.9rem;
+}
+.gear-unit { min-width: 0; }
+.gear-unit + .gear-unit { margin-top: 2.4rem; }
+.gear-unit.is-first .gear-sprocket { display: none; }
+.gear-group { margin-bottom: 0; }
+.gear-group h4 {
+  font-family: var(--code);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 0.55rem;
+}
+.gear-sprocket {
+  height: 10px;
+  margin: 0 0 1.25rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0 8px,
+      rgba(232, 228, 217, 0.12) 8px 16px,
+      transparent 16px 24px
+    );
+  position: relative;
+}
+.gear-sprocket::after {
+  content: "";
+  position: absolute;
+  inset: 2px 0;
+  background: repeating-linear-gradient(
+    to right,
+    var(--ink) 0 6px,
+    transparent 6px 20px
+  );
+  opacity: 0.9;
+}
+.gear-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.55rem;
+  border-bottom: 1px dashed var(--line);
+  font-family: var(--code);
+  cursor: default;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+/* Thumbs need ~44px. Desktop keeps the dense list (it has hover). */
+@media (max-width: 767px) {
+  .gear-item { padding: 0.85rem 0.55rem; }
+}
+.gear-item:focus-within:not(.is-collapsed),
+.gear-item.is-open {
+  background: rgba(240, 162, 2, 0.06);
+}
+.gear-take {
+  flex: none;
+  width: 2.2ch;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--safelight);
+  opacity: 0.7;
+  padding-top: 0.15em;
+}
+.gear-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 0.2em;
+}
+.gear-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--mute);
+}
+.gear-icon.icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--mute);
+}
+.gear-body {
+  flex: 1;
+  min-width: 0;
+}
+.gear-name {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--bone);
+  transition: color 0.2s ease;
+}
+.gear-item:focus-within:not(.is-collapsed) .gear-name,
+.gear-item.is-open .gear-name {
+  color: var(--safelight);
+}
+/* Same 0fr -> 1fr reveal as .call-notes: never clips long notes the way a
+   fixed max-height would, and the inner overflow:hidden does the collapsing. */
+.gear-note {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.gear-note > div {
+  overflow: hidden;
+  min-height: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: #a8a8b0;
+  line-height: 1.55;
+  padding-top: 0.3rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s;
+}
+.gear-item:focus-within:not(.is-collapsed) .gear-note,
+.gear-item.is-open .gear-note {
+  grid-template-rows: 1fr;
+}
+.gear-item:focus-within:not(.is-collapsed) .gear-note > div,
+.gear-item.is-open .gear-note > div {
+  opacity: 1;
+  transform: translateY(0);
+}
+.soft-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+@media (min-width: 768px) {
+  .gear-grid {
+    display: grid;
+    grid-template-rows: repeat(4, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    column-gap: 3.5rem;
+    align-items: start;
+  }
+}
+
+/* ---- skills marquee ---- */
+.marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding: 0.75rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 0;
+}
+html.motion-on .marquee-track {
+  animation: marquee-x 42s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee.is-paused .marquee-track,
+.marquee.is-offscreen .marquee-track { animation-play-state: paused; }
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-item {
+  font-family: var(--code);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  padding: 0 1.25rem;
+  white-space: nowrap;
+}
+.marquee-item::after {
+  content: " · ";
+  color: var(--safelight);
+  margin-left: 1.25rem;
+}
+
+/* ---- end credits ---- */
+.credits-window {
+  overflow: hidden;
+}
+.credits-list {
+  text-align: center;
+  /* lead in from black only. The tail must NOT trail padding: the timeline
+     parks it in the mask's faded top and then cross-fades to the end card, so
+     any bottom padding would show up as a dead black beat between the two. */
+  padding: 10vh 0 0 0;
+}
+/* The roll track is the sticky's containing block and owns the 230vh of scroll
+   room. Both the roll window and the end card are absolute overlays on the
+   sticky, so they share one pinned screen and cross-fade instead of handing
+   off — there is no gap between them. */
+html.motion-on .credits-roll-track { min-height: 230vh; }
+html.motion-on .credits-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  /* Opaque: the overlays sit on this, and the masked roll edges must not show
+     the page through. Being the parent of credits-final also means the end
+     card can never be buried behind it. */
+  background: var(--ink);
+  z-index: 2;
+}
+html.motion-on .credits-window {
+  position: absolute;
+  inset: 0;
+  /* full-bleed roll: a 68vh band left the tail sitting on the window's bottom
+     edge where it peeked out during the handoff to the end card. The top fade
+     is a deep 28% so the tail is fully transparent before the card covers it. */
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 28%, #000 82%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 28%, #000 82%, transparent);
+}
+.credit-line {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.75rem;
+  /* airy end-credit rhythm; also keeps the roll taller than a full-screen
+     window so lines still travel one past another on tall displays */
+  padding: 2.4rem 1rem;
+  font-family: var(--code);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.credit-role { color: var(--mute); }
+.credit-dots {
+  flex: 1;
+  max-width: 120px;
+  border-bottom: 1px dotted var(--line);
+  transform: translateY(-0.25em);
+}
+.credit-name { color: var(--bone); text-align: left; min-width: 12ch; }
+.credit-name.hl { color: var(--safelight); }
+.credit-name.teal { color: var(--teal); }
+
+/* End card overlays the roll on the same pinned screen and cross-fades in on
+   cue. Base styles make it a solid full-page black card so the reduced-motion /
+   no-JS path also hides the roll tail behind it. */
+.credits-final {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Solid full-page black surface in every mode, so the credit roll tail
+     ("Next / Unwritten") can never show through above the end card. */
+  background: var(--ink);
+  position: relative;
+  z-index: 1;
+}
+html.motion-on .credits-final {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  min-height: 0;
+  padding: 0 1.5rem;
+  /* opacity only — never display/visibility — so the end card stays in the
+     accessibility tree the whole time it is waiting for its cue */
+  opacity: 0;
+}
+/* Sighted keyboard users tabbing to a CTA must never hit an invisible control. */
+html.motion-on .credits-final:focus-within {
+  opacity: 1 !important;
+}
+
+/* mobile: role over name, no dot leader. The 3-part row overflows narrow screens
+   ("SPECIAL THANKS" + dots + "XIAOMI COMMUNITY MALAYSIA" is ~430px). */
+@media (max-width: 767px) {
+  .credit-line {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem 0.6rem;
+    padding: 1.15rem 1rem;
+    letter-spacing: 0.08em;
+  }
+  .credit-role { flex-basis: 100%; text-align: center; }
+  .credit-dots { display: none; }
+  .credit-name { min-width: 0; text-align: center; }
+}
+
+/* ---- margin notes (logline) ---- */
+.margin-note {
+  border-left: 2px solid rgba(240, 162, 2, 0.4);
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  font-family: var(--code);
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: var(--mute);
+}
+.margin-note strong { color: var(--bone); font-weight: 500; }
+
+/* ---- portrait reveal ---- */
+.portrait-reveal {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+}
+.portrait-reveal .img-slot { aspect-ratio: 3 / 4; border: 0; width: 100%; }
+.portrait-reveal img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+/* mobile: a compact centred press-kit card. Capping the WIDTH keeps the 3:4
+   ratio intact (zero crop) — full-bleed 3:4 is ~327x436 on a 375px phone,
+   which is a billboard, not a portrait. */
+@media (max-width: 767px) {
+  .portrait-reveal {
+    width: min(100%, 240px);
+    align-self: center;
+  }
+}
+/* desktop: the poster keeps its 3:4 ratio at every width — the old
+   stretch-to-fill turned it into a ~1:2.4 column beside the tall logline
+   rail. align-self: start stops the grid row from pulling it taller. */
+@media (min-width: 768px) {
+  .portrait-reveal { flex: 0 1 auto; width: 100%; align-self: start; }
+  .portrait-reveal .img-slot { aspect-ratio: 3 / 4; }
+  .portrait-reveal img { aspect-ratio: 3 / 4; height: auto; }
+}
+.portrait-payload {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem;
+  background: linear-gradient(to top, rgba(11, 11, 14, 0.96) 60%, transparent);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.portrait-reveal:focus-within:not(.is-collapsed) .portrait-payload,
+.portrait-reveal.is-open .portrait-payload {
+  opacity: 1;
+  transform: translateY(0);
+}
+.portrait-caption {
+  font-family: var(--code);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+  margin-top: 0.6rem;
+}
+
+/* ---- hover reveals (fine pointers only) ----
+   Touch applies :hover on tap and keeps it latched, which pinned every payload
+   open. Keyboard (:focus-within) and tap (.is-open) stay ungated above — this
+   block only restores hover as a desktop convenience, with no JS dependency. */
+@media (hover: hover) and (pointer: fine) {
+  .develop-card:hover:not(.is-collapsed) {
+    border-color: rgba(240, 162, 2, 0.55);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 28px rgba(240, 162, 2, 0.1);
+  }
+  .develop-card:hover:not(.is-collapsed) .develop-media img {
+    filter: grayscale(0) blur(0) contrast(1) brightness(1);
+    transform: scale(1);
+  }
+  .develop-card:hover:not(.is-collapsed) .develop-media .img-slot {
+    filter: grayscale(0) blur(0) contrast(1) brightness(1);
+    transform: scale(1);
+    border-color: transparent;
+  }
+  .develop-card:hover:not(.is-collapsed) .sheen {
+    transform: translateX(120%);
+    transition: transform 0.75s ease;
+  }
+  .develop-card:hover:not(.is-collapsed) .develop-slate {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .call-row:hover:not(.is-collapsed) .call-row-btn {
+    background: rgba(240, 162, 2, 0.05);
+  }
+  .call-row:hover:not(.is-collapsed) .call-notes {
+    grid-template-rows: 1fr;
+  }
+  .call-row:hover:not(.is-collapsed) .call-notes ul {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .gear-item:hover:not(.is-collapsed) {
+    background: rgba(240, 162, 2, 0.06);
+  }
+  .gear-item:hover:not(.is-collapsed) .gear-name {
+    color: var(--safelight);
+  }
+  .gear-item:hover:not(.is-collapsed) .gear-note {
+    grid-template-rows: 1fr;
+  }
+  .gear-item:hover:not(.is-collapsed) .gear-note > div {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .portrait-reveal:hover:not(.is-collapsed) .portrait-payload {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- full frame viewer ----
+   Plain overlay, no GSAP. The open fade is gated on motion-on so reduced-motion
+   gets the frame instantly. Sits above the HUD (95) and below the viewfinder
+   cursor (130) — the cursor must never be occluded. */
+.frame-view {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.frame-view[hidden] { display: none; }
+.frame-view-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 11, 14, 0.92);
+}
+.frame-view-stage {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  max-width: 92vw;
+  max-height: 92vh;
+}
+.frame-view-stage img {
+  display: block;
+  max-width: 92vw;
+  max-height: 82vh;
+  object-fit: contain;
+  background: var(--ink);
+  border: 1px solid var(--line);
+}
+.frame-view-cap {
+  font-family: var(--code);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+}
+.frame-view-index {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--code);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  color: var(--mute);
+  z-index: 1;
+}
+.frame-view-close,
+.frame-view-nav {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  font-family: var(--code);
+  color: var(--bone);
+  background: rgba(20, 20, 26, 0.82);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.frame-view-close:hover,
+.frame-view-nav:hover {
+  color: var(--safelight);
+  border-color: rgba(240, 162, 2, 0.55);
+}
+.frame-view-close {
+  top: 1.25rem;
+  right: 1.25rem;
+  font-size: 1rem;
+}
+.fv-prev { left: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 1.5rem; }
+.fv-next { right: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 1.5rem; }
+html.motion-on .frame-view.is-open .frame-view-stage,
+html.motion-on .frame-view.is-open .frame-view-close,
+html.motion-on .frame-view.is-open .frame-view-nav,
+html.motion-on .frame-view.is-open .frame-view-index {
+  animation: fv-in 0.2s ease both;
+}
+@keyframes fv-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- scroll reveals ----
+   Visible by default — script.js sets the hidden state only under motion-on,
+   so no-JS / reduced-motion / a GSAP failure leaves every block readable. */
+.reveal {
+  /* intentionally empty: default is visible */
+}
+
+/* ---- safe-area (notched phones; needs viewport-fit=cover) ---- */
+/* The HUD is gone on mobile, so the only fixed/edge chrome left is the
+   cold-open scroll cue and the footer. These own bottom/ padding-bottom
+   outright (no Tailwind utility on the same side) so the env() wins. */
+.cue-advance {
+  bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+.site-footer {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ---- section rhythm ---- */
+/* Tailwind's min-h-screen is 100vh — the collapsing toolbar overshoots it. */
+#cold-open {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.cut {
+  position: relative;
+  padding: 7rem 0;
+}
+.cut-tight { padding: 5rem 0; }
+@media (max-width: 767px) {
+  .cut { padding: 4.5rem 0; }
+  .cut-tight { padding: 3.5rem 0; }
+}
+
+/* ---- reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .grain, .status-dot, .hud-timecode .hud-rec, .cursor-blink,
+  .light-leak::before, .light-leak::after { animation: none !important; }
+  .sheen { display: none; }
+
+  /* un-clip containers so statically-flowed payloads are never cut off */
+  .develop-media {
+    aspect-ratio: auto;
+    overflow: visible;
+  }
+  .develop-media img,
+  .develop-media .img-slot {
+    position: static;
+    inset: auto;
+    transition: none;
+    filter: none;
+    transform: none;
+  }
+  .develop-media img,
+  .develop-media .img-slot {
+    aspect-ratio: 4 / 5;
+    height: auto;
+  }
+  .can-grid {
+    position: static;
+    min-height: 300px;
+  }
+  .develop-slate {
+    position: static;
+    opacity: 1;
+    transform: none;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    padding: 1rem;
+  }
+  .portrait-reveal { overflow: visible; }
+  .portrait-payload {
+    position: static;
+    opacity: 1;
+    transform: none;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    padding: 1rem;
+  }
+  .call-notes { grid-template-rows: 1fr !important; }
+  .call-notes ul { opacity: 1 !important; transform: none !important; }
+  .gear-note { grid-template-rows: 1fr !important; }
+  .gear-note > div { opacity: 1 !important; transform: none !important; }
+  .cursor-view { display: none !important; }
+  html.has-cursor, html.has-cursor * { cursor: auto !important; }
+}

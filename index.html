@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Vincent Lee — Director's Cut</title>
+  <meta name="description" content="Vincent Lee — a film in six acts. CS undergrad building AI bots, web apps & automation workflows. Grand Winner, TFE x SCENT Demo Day." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="antialiased">
+
+<!-- ============ FILM CHROME ============ -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="cursor-view" id="cursor-view" aria-hidden="true">
+  <span class="cv-dot"></span>
+  <span class="cv cv-tl"></span><span class="cv cv-tr"></span>
+  <span class="cv cv-bl"></span><span class="cv cv-br"></span>
+</div>
+<div class="hud-timecode" id="hud-timecode" aria-hidden="true">
+  <span class="hud-rec"></span><span id="hud-tc">00:00:00:00</span>
+</div>
+
+<main>
+
+<!-- ============ COLD OPEN ============ -->
+<section id="cold-open" class="relative min-h-screen flex items-center overflow-hidden">
+  <div class="light-leak" aria-hidden="true"></div>
+  <div class="relative z-10 max-w-5xl mx-auto px-6 w-full pt-24 pb-20">
+    <div class="flex flex-wrap items-start justify-between gap-3 sm:gap-6 mb-10">
+      <div class="font-mono text-[0.65rem] tracking-[0.22em] uppercase text-[#6b6b76]">
+        <div>Reel 01 · Take 01</div>
+        <div class="mt-1 text-[#f0a202]">2026 · Kuching, Sarawak</div>
+      </div>
+      <div class="rating-card">
+        <span class="rc-glyph">R</span>
+        <span class="rc-text">Rated R — for relentless builder</span>
+      </div>
+    </div>
+
+    <p class="font-mono text-[0.7rem] tracking-[0.32em] uppercase text-[#6b6b76] mb-3">A film by</p>
+    <h1 class="font-title text-[clamp(3.5rem,13vw,9rem)] text-[#e8e4d9] mb-4">
+      Vincent Lee
+    </h1>
+    <p class="font-mono text-[0.7rem] tracking-[0.32em] uppercase text-[#6b6b76] mb-3">in</p>
+    <p class="font-title text-[clamp(1.6rem,5vw,3.4rem)] text-[#f0a202] mb-8 reveal">
+      &ldquo;I build pipelines that think&rdquo;<span class="cursor-blink">_</span>
+    </p>
+
+    <div class="mb-6 reveal">
+      <span class="status-chip"><span class="status-dot"></span>REC · open to internships &amp; collaborations</span>
+    </div>
+
+    <p class="text-[#6b6b76] text-lg md:text-xl max-w-2xl leading-relaxed mb-10 reveal">
+      CS undergrad · AI &amp; workflow automation developer ·
+      <span class="text-[#f0a202] font-medium">Grand Winner</span>, TFE x SCENT Demo Day
+    </p>
+
+    <div class="flex flex-wrap gap-4 reveal">
+      <a href="#feature" class="slate-btn slate-btn-primary magnetic">▶ Roll camera</a>
+      <a href="https://github.com/vincentlee001804" target="_blank" rel="noopener" class="slate-btn magnetic">GitHub ↗</a>
+      <a href="https://www.linkedin.com/in/vincent-lee-lch/" target="_blank" rel="noopener" class="slate-btn magnetic">LinkedIn ↗</a>
+    </div>
+  </div>
+  <div class="cue-advance absolute left-1/2 -translate-x-1/2 font-mono text-[0.65rem] tracking-[0.24em] uppercase text-[#6b6b76]">▼ Advance film</div>
+</section>
+
+<!-- ============ LOGLINE ============ -->
+<section id="logline" class="cut relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <p class="kicker reveal">00:01:22 — Press kit</p>
+    <h2 class="font-title text-[clamp(2.2rem,6vw,4.2rem)] text-[#e8e4d9] mb-12 reveal">The logline</h2>
+
+    <div class="grid md:grid-cols-[300px_1fr] gap-12">
+      <div class="flex flex-col reveal">
+        <div class="portrait-reveal" data-reveal tabindex="0" role="button" aria-expanded="false" aria-label="Vincent Lee portrait — reveal details">
+          <img src="assets/hero-portrait.webp" alt="Vincent Lee" />
+          <div class="portrait-payload">
+            <p class="font-mono text-[0.6rem] tracking-[0.18em] uppercase text-[#f0a202] mb-2">The human behind the shot</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="fact-chip">📍 Kuching, Sarawak</span>
+              <span class="fact-chip">🎓 CS @ UTS &rsquo;27</span>
+              <span class="fact-chip">🤖 bots · automation · AI</span>
+            </div>
+          </div>
+        </div>
+        <p class="portrait-caption">Subject · Vincent Lee · Status: available</p>
+      </div>
+
+      <div class="flex flex-col reveal">
+        <p class="text-lg md:text-xl text-[#e8e4d9] leading-relaxed mb-6">
+          I&rsquo;m a Computer Science undergrad at <span class="text-[#2dd4bf] font-medium">UTS</span> who builds AI bots,
+          web apps and automation workflows — and creates tech content around Xiaomi and AI at
+          <span class="text-[#f0a202]">Lee Tech News</span>.
+        </p>
+        <p class="text-[#6b6b76] text-lg leading-relaxed mb-8">
+          My team took <span class="text-[#f0a202] font-medium">Grand Winner</span> at TFE x SCENT Demo Day 2026 with
+          KitchenCurator. I&rsquo;ve since built sites for ANCHR AI Labs in Singapore — including the Women in Claude
+          learning archive — and returned to the Sarawak × Singapore AI Hackathon as a Technical Facilitator, mentoring 11 teams.
+        </p>
+
+        <div class="grid sm:grid-cols-3 gap-5 mb-8">
+          <p class="margin-note"><strong>3+ years</strong> of tech content at Lee Tech News — Xiaomi, AI silicon, smart ecosystems.</p>
+          <p class="margin-note"><strong>Moderator</strong>, Xiaomi Community Malaysia — keeping the fan community loud.</p>
+          <p class="margin-note"><strong>Always open</strong> to learning, collaborating, and exploring new ideas.</p>
+        </div>
+
+        <div class="clapper">
+          <div class="clapper-stripe" aria-hidden="true"></div>
+          <div class="clapper-body">
+            <div class="clapper-row"><span class="k">Production</span><span class="v">Vincent Lee</span></div>
+            <div class="clapper-row"><span class="k">Genre</span><span class="v">AI · Automation · Bots</span></div>
+            <div class="clapper-row"><span class="k">Location</span><span class="v">Kuching, Sarawak</span></div>
+            <div class="clapper-row"><span class="k">Runtime</span><span class="v">CS @ UTS · 2024–2027</span></div>
+            <div class="clapper-row"><span class="k">Status</span><span class="v hl">Open to internships</span></div>
+          </div>
+        </div>
+
+        <p class="font-mono text-sm text-[#2dd4bf] mt-8">
+          &gt; looking for internships &amp; collaborations in AI development, web engineering, workflow automation.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE FEATURE PRESENTATION ============ -->
+<section id="feature" class="cut-tight relative">
+  <div class="max-w-6xl mx-auto px-6 mb-10">
+    <p class="kicker reveal">00:03:10 — Feature presentation</p>
+    <h2 class="font-title text-[clamp(2.2rem,6vw,4.2rem)] text-[#e8e4d9] mb-3 reveal">A film in six acts</h2>
+    <p class="text-[#6b6b76] text-lg max-w-2xl reveal">&ldquo;Every workflow starts with a trigger. Mine was a hackathon.&rdquo;</p>
+  </div>
+
+  <div class="feature-pin">
+    <div class="letterbox-bar" aria-hidden="true"></div>
+
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <div class="feature-stage">
+        <div class="acts-frame" id="acts-frame">
+          <div class="act-shot is-first" data-act="0">
+            <img src="assets/act-01.webp" alt="Lee Tech News — the content origin" />
+          </div>
+          <div class="act-shot" data-act="1">
+            <img src="assets/act-02.webp" alt="Sarawak x Singapore AI Design Hackathon — the hot seat" />
+          </div>
+          <div class="act-shot" data-act="2">
+            <img src="assets/act-03.webp" alt="KitchenCurator — Grand Winner, TFE x SCENT Demo Day" />
+          </div>
+          <div class="act-shot" data-act="3">
+            <img src="assets/act-04.webp" alt="Women in Claude learning archive — shipping for ANCHR AI Labs in Singapore" />
+          </div>
+          <div class="act-shot" data-act="4">
+            <div class="act-shot-stack">
+              <img class="act-still act-still-a" src="assets/act-05-1.webp" alt="AI Friendship Design Hackathon — mentoring teams on the floor" />
+              <img class="act-still act-still-b" src="assets/act-05-2.webp" alt="AI Friendship Design Hackathon — facilitators with participant teams" />
+            </div>
+          </div>
+          <div class="act-shot" data-act="5">
+            <div class="act-slate-missing" data-slot="act-06" aria-label="Act VI still — not yet supplied">
+              <span class="asm-glyph">?</span>
+              <span class="asm-tag">Shot pending — to be continued…</span>
+              <div class="img-slot-corners" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acts-slate" id="acts-slate">
+          <div class="act-meta is-first" data-act="0">
+            <div class="act-block">
+              <p class="act-num">Act I · 2023:03</p>
+              <h3 class="act-title">The Content Origin</h3>
+              <p class="act-desc">Started Lee Tech News — began creating tech content and never stopped.</p>
+            </div>
+          </div>
+          <div class="act-meta" data-act="1">
+            <div class="act-block">
+              <p class="act-num">Act II · 2025:09</p>
+              <h3 class="act-title">The Hot Seat</h3>
+              <p class="act-desc">Joined the Sarawak X Singapore AI Design Hackathon as a participant. Finished — and got hooked.</p>
+            </div>
+          </div>
+          <div class="act-meta" data-act="2">
+            <div class="act-block">
+              <p class="act-num">Act III · 2026:05</p>
+              <h3 class="act-title">The Win</h3>
+              <p class="act-desc">Built KitchenCurator with Team Tekkonologia. <span class="text-[#f0a202] font-medium">Grand Winner</span>, TFE x SCENT Demo Day Cohort 2.</p>
+            </div>
+          </div>
+          <div class="act-meta" data-act="3">
+            <div class="act-block">
+              <p class="act-num">Act IV · 2026:07</p>
+              <h3 class="act-title">Shipping for Real</h3>
+              <p class="act-desc">Freelance AI Web Developer for ANCHR AI Labs — launched the Women in Claude event archive in Singapore.</p>
+            </div>
+          </div>
+          <div class="act-meta" data-act="4">
+            <div class="act-block">
+              <p class="act-num">Act V · 2026:09</p>
+              <h3 class="act-title">The Facilitator&rsquo;s Chair</h3>
+              <p class="act-desc">Returned to the same hackathon as Technical Facilitator &amp; SAIYAN Ambassador — mentored 11 teams.</p>
+            </div>
+          </div>
+          <div class="act-meta" data-act="5">
+            <div class="act-block">
+              <p class="act-num">Act VI · ????:??</p>
+              <h3 class="act-title">Next Node &mdash; Unwritten</h3>
+              <p class="act-desc">The next node is unwritten. Maybe it connects to you.</p>
+              <p class="font-mono text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf] mt-3 mb-4">To be continued…</p>
+              <a href="#credits" class="slate-btn slate-btn-primary magnetic">Write the next scene with me</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrub-track mt-10" id="scrub-track" role="tablist" aria-label="Act scrubber"></div>
+    </div>
+
+    <div class="letterbox-bar bottom" aria-hidden="true"></div>
+  </div>
+</section>
+
+<!-- ============ THE REEL ============ -->
+<section id="reel" class="reel-section relative py-20 overflow-hidden">
+  <div class="max-w-6xl mx-auto px-6 mb-10">
+    <p class="kicker">00:41:05 — The reel</p>
+    <h2 class="font-title text-[clamp(2.2rem,6vw,4.2rem)] text-[#e8e4d9] mb-3">Selected work</h2>
+    <p class="font-mono text-[0.65rem] tracking-[0.22em] uppercase text-[#6b6b76]">
+      Selected work 2023–2026 · 4 frames + extras · hover or tap to develop<span class="reel-swipe-hint"> · swipe →</span>
+    </p>
+  </div>
+
+  <div class="sprockets" aria-hidden="true"></div>
+  <div class="reel-wrap py-10">
+    <div class="reel-strip" id="reel-strip"></div>
+  </div>
+  <p class="reel-index" id="reel-index" aria-hidden="true"></p>
+  <div class="sprockets" aria-hidden="true"></div>
+</section>
+
+<!-- ============ CALL SHEET ============ -->
+<section id="call-sheet" class="cut relative">
+  <div class="max-w-5xl mx-auto px-6">
+    <p class="kicker reveal">01:12:40 — Call sheet</p>
+    <h2 class="font-title text-[clamp(2.2rem,6vw,4.2rem)] text-[#e8e4d9] mb-3 reveal">Production history</h2>
+    <p class="text-[#6b6b76] text-lg mb-12 reveal">Full execution history — hover, focus or tap a row for notes from set.</p>
+    <div class="call-table" id="call-table"></div>
+  </div>
+</section>
+
+<!-- ============ GEAR LIST ============ -->
+<section id="gear" class="cut relative">
+  <div class="max-w-6xl mx-auto px-6">
+    <p class="kicker reveal">01:28:15 — Gear list</p>
+    <h2 class="font-title text-[clamp(2.2rem,6vw,4.2rem)] text-[#e8e4d9] mb-3 reveal">Camera dept. &amp; utilities</h2>
+    <p class="text-[#6b6b76] text-lg mb-12 reveal">Tools in the truck — hover a line for where it&rsquo;s been used.</p>
+
+    <div class="gear-grid" id="gear-grid"></div>
+
+    <div class="mt-10 reveal">
+      <p class="font-mono text-[0.62rem] tracking-[0.18em] uppercase text-[#6b6b76] mb-4">&gt; also on the call sheet</p>
+      <div class="soft-row" id="soft-skills"></div>
+    </div>
+  </div>
+
+  <div class="mt-16 reveal">
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track" id="marquee-track"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ END CREDITS ============ -->
+<section id="credits" class="credits-section relative">
+  <div class="credits-roll-track">
+    <div class="credits-sticky">
+      <div class="credits-window">
+        <div class="credits-list" id="credits-list"></div>
+      </div>
+
+      <div class="credits-final max-w-3xl mx-auto px-6 text-center">
+        <p class="kicker justify-center reveal">01:47:30 — End credits</p>
+        <h2 class="font-title text-[clamp(2.4rem,7vw,5rem)] text-[#e8e4d9] mb-6 reveal">
+          Want in on<br/><span class="text-[#f0a202]">the next one?</span>
+        </h2>
+        <p class="text-[#6b6b76] text-xl mb-4 reveal">The next node is unwritten. Maybe it connects to you.</p>
+        <p class="font-mono text-sm text-[#2dd4bf] mb-12 reveal">&gt; awaiting handshake… <span class="cursor-blink">▊</span></p>
+
+        <div class="flex flex-wrap justify-center gap-4 mb-16 reveal">
+          <a href="mailto:vincentleechenghong@gmail.com" class="slate-btn slate-btn-primary magnetic">✉ Email me</a>
+          <a href="https://wa.me/vincentlee_4966" target="_blank" rel="noopener" class="slate-btn magnetic">WhatsApp ↗</a>
+          <a href="https://www.linkedin.com/in/vincent-lee-lch/" target="_blank" rel="noopener" class="slate-btn magnetic">LinkedIn ↗</a>
+          <a href="https://github.com/vincentlee001804" target="_blank" rel="noopener" class="slate-btn magnetic">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer border-t border-[#26262e] pt-6">
+  <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-2 font-mono text-[0.62rem] tracking-[0.12em] uppercase text-[#6b6b76]">
+    <span>© 2026 Vincent Lee</span>
+    <span>No workflows were harmed in the making of this film</span>
+  </div>
+</footer>
+
+<!-- ============ FULL FRAME VIEWER ============ -->
+<div class="frame-view" id="frame-view" role="dialog" aria-modal="true" aria-label="Full frame" hidden>
+  <div class="frame-view-backdrop" data-close></div>
+  <figure class="frame-view-stage">
+    <img id="frame-view-img" alt="" />
+    <figcaption id="frame-view-cap"></figcaption>
+  </figure>
+  <button class="frame-view-close" type="button" data-close aria-label="Close full frame">✕</button>
+  <button class="frame-view-nav fv-prev" type="button" aria-label="Previous frame">‹</button>
+  <button class="frame-view-nav fv-next" type="button" aria-label="Next frame">›</button>
+  <p class="frame-view-index" id="frame-view-index" aria-hidden="true"></p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
