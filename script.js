@@ -1027,7 +1027,7 @@ function initCursor() {
   document.addEventListener("mouseenter", () => cur.classList.add("is-live"));
 
   document.addEventListener("mouseover", (e) => {
-    const hit = e.target.closest("[data-reveal], .develop-card, .call-row, .gear-item, .portrait-reveal, .frame-expand, .frame-view button");
+    const hit = e.target.closest("[data-reveal], .develop-card, .call-row, .gear-item, .portrait-reveal, .frame-expand, .frame-view button, .back-top");
     cur.classList.toggle("is-framed", Boolean(hit));
   });
 }
@@ -1080,7 +1080,12 @@ function initFrameView() {
     view.classList.remove("is-open");
     view.hidden = true;
     document.documentElement.style.overflow = "";
-    if (returnTo && returnTo.focus) returnTo.focus();
+    /* Focus restoration is a keyboard / fine-pointer courtesy. On touch it
+       re-focuses the tapped card, and :focus-within then keeps the slate
+       revealed even after auto-develop moves on — the stuck-open card bug.
+       Leaving focus on <body> there keeps auto-drive in charge of the
+       reveal. */
+    if (returnTo && finePointer && returnTo.focus) returnTo.focus();
     returnTo = null;
   }
 
@@ -1153,6 +1158,29 @@ function initFrameView() {
   });
 }
 
+/* ================= BACK TO TOP ================= */
+
+/* Floating ↑ that appears once the visitor reaches the end credits and scrolls
+   back to the top on tap. Visibility is class-toggled by an
+   IntersectionObserver on the end card (no scroll listener); html's
+   scroll-behavior owns smoothness, and the reduced-motion media query in
+   style.css already drops that to auto. Without IntersectionObserver the
+   button falls back to always-visible — still useful from anywhere. */
+function initBackToTop() {
+  const btn = document.getElementById("back-top");
+  if (!btn) return;
+  btn.addEventListener("click", () => window.scrollTo(0, 0));
+  const target = document.querySelector(".credits-final") || document.getElementById("credits");
+  if (!target || typeof IntersectionObserver === "undefined") {
+    btn.classList.add("is-visible");
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => btn.classList.toggle("is-visible", e.isIntersecting));
+  }, { rootMargin: "0px 0px -35% 0px", threshold: 0 });
+  io.observe(target);
+}
+
 /* ================= REEL AUTO-DEVELOP (touch) ================= */
 
 /* Hover is gated to fine pointers, so on a phone the develop slate is otherwise
@@ -1218,6 +1246,7 @@ function init() {
   initReelIndex();
   initMarquee();
   initFrameView();
+  initBackToTop();
 
   /* Pins first, then the reveal triggers that must fire around them (the Reel
      intro is documented to fire before its pin engages). Not gated on

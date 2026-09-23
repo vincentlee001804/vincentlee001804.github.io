@@ -1848,6 +1848,49 @@ html.motion-on .frame-view.is-open .frame-view-index {
   to { opacity: 1; }
 }
 
+/* ---- back to top ----
+   Appears only after the visitor reaches the end credits (initBackToTop
+   toggles .is-visible via IntersectionObserver). Sits above content but
+   below the full-frame viewer (120) and the viewfinder cursor (130), and
+   clears the notch / home indicator via safe-area insets. Visibility, not
+   display, so it can fade; hidden state also drops it from the tab order. */
+.back-top {
+  position: fixed;
+  right: calc(1rem + env(safe-area-inset-right, 0px));
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  z-index: 110;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--code);
+  font-size: 1.05rem;
+  color: var(--bone);
+  background: rgba(20, 20, 26, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease,
+    color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.back-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.back-top:hover {
+  color: var(--safelight);
+  border-color: rgba(240, 162, 2, 0.55);
+  background: rgba(20, 20, 26, 0.95);
+}
+@media (prefers-reduced-motion: reduce) {
+  .back-top { transition: none; }
+}
+
 /* ---- scroll reveals ----
    Visible by default — script.js sets the hidden state only under motion-on,
    so no-JS / reduced-motion / a GSAP failure leaves every block readable. */
