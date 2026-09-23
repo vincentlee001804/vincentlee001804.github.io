@@ -928,6 +928,13 @@ html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out inf
     gap: 1rem;
     align-content: start;
   }
+  /* The LAST slide has no next card to peek, so a start-snap leaves it
+     left-aligned with a dead black band on the right — inconsistent with
+     every other slide. Snapping it CENTRED splits the leftover evenly on
+     both sides, which reads as an intentional end card. */
+  .feature-stage > .act-track > .act-slide:last-child {
+    scroll-snap-align: center;
+  }
 }
 /* Act V's pair collapses into one aperture and fades through ink. motion-on is
    only set when GSAP loaded AND prefers-reduced-motion is not reduce, so the
