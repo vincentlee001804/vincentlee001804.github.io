@@ -87,9 +87,20 @@
   <span class="cv cv-tl"></span><span class="cv cv-tr"></span>
   <span class="cv cv-bl"></span><span class="cv cv-br"></span>
 </div>
-<div class="hud-timecode" id="hud-timecode" aria-hidden="true">
-  <span class="hud-rec"></span><span id="hud-tc">00:00:00:00</span>
-</div>
+<nav class="hud-nav" id="hud-nav" aria-label="Scenes">
+  <div class="hud-cuts">
+    <a class="hud-cut" href="#cold-open" data-scene="cold-open" data-name="Cold Open" aria-label="Scene 00 — Cold Open"><span aria-hidden="true">00</span></a>
+    <a class="hud-cut" href="#logline" data-scene="logline" data-name="Logline" aria-label="Scene 01 — Logline"><span aria-hidden="true">01</span></a>
+    <a class="hud-cut" href="#feature" data-scene="feature" data-name="Six Acts" aria-label="Scene 02 — Six Acts"><span aria-hidden="true">02</span></a>
+    <a class="hud-cut" href="#reel" data-scene="reel" data-name="The Reel" aria-label="Scene 03 — The Reel"><span aria-hidden="true">03</span></a>
+    <a class="hud-cut" href="#call-sheet" data-scene="call-sheet" data-name="Call Sheet" aria-label="Scene 04 — Call Sheet"><span aria-hidden="true">04</span></a>
+    <a class="hud-cut" href="#gear" data-scene="gear" data-name="Gear" aria-label="Scene 05 — Gear"><span aria-hidden="true">05</span></a>
+    <a class="hud-cut" href="#credits" data-scene="credits" data-name="End Credits" aria-label="Scene 06 — End Credits"><span aria-hidden="true">06</span></a>
+  </div>
+  <div class="hud-timecode" aria-hidden="true">
+    <span class="hud-rec"></span><span id="hud-tc">00:00:00:00</span>
+  </div>
+</nav>
 
 <main>
 
@@ -398,6 +409,60 @@
   <button class="frame-view-nav fv-prev" type="button" aria-label="Previous frame">‹</button>
   <button class="frame-view-nav fv-next" type="button" aria-label="Next frame">›</button>
   <p class="frame-view-index" id="frame-view-index" aria-hidden="true"></p>
+</div>
+
+<!-- ============ SCENE BAR (mobile) ============ -->
+<nav class="scene-bar" id="scene-bar" aria-label="Scene">
+  <span class="scene-bar-now" id="scene-bar-now" aria-hidden="true"><span class="scene-bar-dot">●</span> 00 / 06 — COLD OPEN</span>
+  <button class="scene-bar-btn" id="scene-bar-btn" type="button" aria-expanded="false" aria-controls="scene-slate">Scenes</button>
+</nav>
+
+<!-- ============ SCENE SLATE (mobile) ============ -->
+<div class="scene-slate" id="scene-slate" role="dialog" aria-modal="true" aria-label="Scene selection" hidden>
+  <div class="scene-slate-backdrop" data-scene-close></div>
+  <div class="scene-slate-panel">
+    <div class="scene-slate-head">
+      <p class="scene-slate-kicker">Director&rsquo;s cut &middot; scene selection</p>
+      <button class="scene-slate-close" type="button" data-scene-close aria-label="Close scene selection">&#10005;</button>
+    </div>
+    <nav class="scene-slate-list" aria-label="Scenes">
+      <a class="scene-row" href="#cold-open" data-scene="cold-open">
+        <span class="scene-row-num">00</span>
+        <span class="scene-row-name">Cold Open</span>
+        <span class="scene-row-tc">TC 00:00:00</span>
+      </a>
+      <a class="scene-row" href="#logline" data-scene="logline">
+        <span class="scene-row-num">01</span>
+        <span class="scene-row-name">Logline</span>
+        <span class="scene-row-tc">TC 00:01:22</span>
+      </a>
+      <a class="scene-row" href="#feature" data-scene="feature">
+        <span class="scene-row-num">02</span>
+        <span class="scene-row-name">Six Acts</span>
+        <span class="scene-row-tc">TC 00:03:10</span>
+      </a>
+      <a class="scene-row" href="#reel" data-scene="reel">
+        <span class="scene-row-num">03</span>
+        <span class="scene-row-name">The Reel</span>
+        <span class="scene-row-tc">TC 00:41:05</span>
+      </a>
+      <a class="scene-row" href="#call-sheet" data-scene="call-sheet">
+        <span class="scene-row-num">04</span>
+        <span class="scene-row-name">Call Sheet</span>
+        <span class="scene-row-tc">TC 01:12:40</span>
+      </a>
+      <a class="scene-row" href="#gear" data-scene="gear">
+        <span class="scene-row-num">05</span>
+        <span class="scene-row-name">Gear</span>
+        <span class="scene-row-tc">TC 01:28:15</span>
+      </a>
+      <a class="scene-row" href="#credits" data-scene="credits">
+        <span class="scene-row-num">06</span>
+        <span class="scene-row-name">End Credits</span>
+        <span class="scene-row-tc">TC 01:47:30</span>
+      </a>
+    </nav>
+  </div>
 </div>
 
 <button class="back-top" id="back-top" type="button" aria-label="Back to top">↑</button>

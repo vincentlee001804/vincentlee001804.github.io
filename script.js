@@ -1242,6 +1242,338 @@ function initReelAutoDevelop() {
   drive();
 }
 
+/* ================= SCENE NAV ================= */
+
+/* Desktop: the HUD cue strip (00–06) glides to each cut. Mobile: the
+   bottom scene bar (● NN / 06 — NAME) plus a Scenes button that opens the
+   full-width scene slate. Both share the same active-scene math as the HUD
+   (last TC mark at or above the scroll position), and jumps ride the page's
+   native smooth scroll — the playhead sweeps through the intermediate
+   scenes during the glide, exactly like wheel scrolling (reduced-motion
+   jumps stay instant). Links are real anchors, so no-JS visitors keep
+   ordinary hash navigation. */
+const SCENE_NAMES = {
+  "cold-open": "Cold Open",
+  logline: "Logline",
+  feature: "Six Acts",
+  reel: "The Reel",
+  "call-sheet": "Call Sheet",
+  gear: "Gear",
+  credits: "End Credits",
+};
+
+function initSceneNav() {
+  const hudNav = document.getElementById("hud-nav");
+  const ticks = hudNav ? Array.from(hudNav.querySelectorAll(".hud-cut")) : [];
+  const bar = document.getElementById("scene-bar");
+  const barNow = document.getElementById("scene-bar-now");
+  const barBtn = document.getElementById("scene-bar-btn");
+  const slate = document.getElementById("scene-slate");
+  const slateClose = slate ? slate.querySelector(".scene-slate-close") : null;
+  const rows = slate ? Array.from(slate.querySelectorAll(".scene-row")) : [];
+  const backTopEl = document.getElementById("back-top");
+  if (!ticks.length && !bar) return;
+
+  let marks = [];
+  let activeIdx = -1;
+  let barLive = false;
+  let raf = 0;
+  let lastFocus = null;
+
+  /* #reel is the pinned element itself, so while its pin is engaged its own
+     rect is fixed-position fiction; the pin-spacer holds its true document
+     position. (.feature-pin is pinned *inside* #feature, which never moves,
+     so the spacer branch simply never triggers for it.) */
+  function sceneY(node) {
+    const holder =
+      node.parentElement && node.parentElement.classList.contains("pin-spacer")
+        ? node.parentElement
+        : node;
+    return holder.getBoundingClientRect().top + window.scrollY;
+  }
+
+  function measure() {
+    marks = TC_MARKS.map((t) => {
+      const node = document.getElementById(t.id);
+      return { id: t.id, y: node ? sceneY(node) : 0 };
+    });
+  }
+
+  function currentIndex() {
+    const y = window.scrollY + 2;
+    let idx = 0;
+    for (let i = 0; i < marks.length; i++) if (y >= marks[i].y) idx = i;
+    return idx;
+  }
+
+  function paint() {
+    if (!marks.length) return;
+    const idx = currentIndex();
+    if (idx !== activeIdx) {
+      activeIdx = idx;
+      const id = marks[idx].id;
+      [...ticks, ...rows].forEach((l) => {
+        if (l.dataset.scene === id) l.setAttribute("aria-current", "location");
+        else l.removeAttribute("aria-current");
+      });
+      if (barNow) {
+        barNow.innerHTML =
+          `<span class="scene-bar-dot">●</span> ${String(idx).padStart(2, "0")} / 06 — ` +
+          (SCENE_NAMES[id] || id).toUpperCase();
+      }
+    }
+    if (!bar) return;
+    /* The bar stays hidden over the cold open (title card stays clean) and
+       near the footer/end card (never covers the last CTAs or the footer
+       itself), and while the slate is open. */
+    const vh = window.innerHeight;
+    const foot = document.querySelector(".site-footer");
+    const footTop = foot ? sceneY(foot) : Infinity;
+    const slateOpen = slate && !slate.hidden;
+    /* The back-to-top arrow owns the corner once the end credits are reached
+       — the bar never shares the bottom edge with it. */
+    const backTopShown = backTopEl && backTopEl.classList.contains("is-visible");
+    const live =
+      window.scrollY > vh * 0.6 &&
+      footTop - window.scrollY >= vh * 0.9 &&
+      !slateOpen &&
+      !backTopShown;
+    if (live !== barLive) {
+      barLive = live;
+      bar.classList.toggle("is-live", live);
+    }
+  }
+
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      paint();
+    });
+  }
+
+  function onResize() {
+    measure();
+    paint();
+  }
+
+  /* Glide to a scene like ordinary scrolling — html { scroll-behavior:
+     smooth } owns the motion, so the playhead sweeps through the intermediate
+     scenes during the glide, same as wheel scrolling (reduced-motion sets
+     scroll-behavior back to auto, so those jumps stay instant). Scene 06
+     lands on the end card ("Want in on the next one?") rather than the top
+     of the roll — the roll is the journey, the card is the destination.
+     Active-scene tracking still keys off #credits' own top, so the whole
+     roll reads as scene 06. */
+  /* Glide to a scene like ordinary scrolling, with the target re-measured
+     EVERY FRAME. Two hard-won lessons live here:
+     1. A once-measured smooth scroll targets an absolute offset. When the
+        document shifts underneath the glide — webfonts swapping metrics
+        mid-flight is the classic, and it moves the tall credits list enough
+        to strand scene 06 inside the roll — the glide ends where the target
+        USED to be. Re-measuring each frame makes the glide chase the live
+        target and land exactly.
+     2. The tween is ours (rAF, ease-out-cubic, duration scaled to distance)
+        rather than the native scroll-behavior animation, so per-frame sets
+        stay instant — html { scroll-behavior: smooth } would re-animate
+        every set. Wheel / touch / keys mid-glide hand control back to the
+        visitor and cancel the tween (bounded rAF, never a loop).
+     Scene 06 lands on the end card ("Want in on the next one?"), not the
+     top of the roll — the roll is the journey, the card is the destination.
+     Active-scene tracking still keys off #credits' own top. */
+  function targetTop(id) {
+    let target = document.getElementById(id);
+    if (id === "credits") {
+      const final = document.querySelector(".credits-final");
+      if (final) target = final;
+    }
+    if (!target) return null;
+    const holder =
+      target.parentElement && target.parentElement.classList.contains("pin-spacer")
+        ? target.parentElement
+        : target;
+    return holder.getBoundingClientRect().top + window.scrollY;
+  }
+
+  let glideRaf = 0;
+  let glidePrevBehavior = "";
+
+  function jumpTo(id) {
+    /* a new jump supersedes any glide already in flight */
+    if (glideRaf) cancelAnimationFrame(glideRaf);
+    glideRaf = 0;
+    const y0 = window.scrollY;
+    const live = targetTop(id);
+    if (live === null) return;
+    if (prefersReduced) {
+      window.scrollTo(0, live + 2);
+      return;
+    }
+    const de = document.documentElement;
+    glidePrevBehavior = de.style.scrollBehavior;
+    de.style.scrollBehavior = "auto"; /* per-frame sets must not re-smooth */
+    const duration = Math.min(1100, Math.max(450, Math.abs(live - y0) / 2.2));
+    const t0 = performance.now();
+    let canceled = false;
+    const hijack = () => { canceled = true; };
+    window.addEventListener("wheel", hijack, { once: true, passive: true });
+    window.addEventListener("touchstart", hijack, { once: true, passive: true });
+    window.addEventListener("keydown", hijack, { once: true });
+    const finish = () => {
+      window.removeEventListener("wheel", hijack);
+      window.removeEventListener("touchstart", hijack);
+      window.removeEventListener("keydown", hijack);
+      de.style.scrollBehavior = glidePrevBehavior;
+      glideRaf = 0;
+    };
+    const frame = (now) => {
+      glideRaf = 0;
+      if (canceled) {
+        finish();
+        return;
+      }
+      const t = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const target = targetTop(id); /* live — chase a moving target */
+      if (target === null) {
+        finish();
+        return;
+      }
+      window.scrollTo(0, y0 + (target - y0) * eased + 2);
+      if (t < 1) glideRaf = requestAnimationFrame(frame);
+      else finish();
+    };
+    glideRaf = requestAnimationFrame(frame);
+  }
+
+  /* Every in-page scene link — HUD ticks, slate rows, and content buttons
+     like Act VI's "Write the next scene with me" — glides to the same
+     destination. Delegated so future anchors get it for free; preventDefault
+     keeps the hash out of the URL (scene 06 as a raw #credits anchor would
+     land on the roll, not the end card). */
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    const id = a.getAttribute("href").slice(1);
+    if (!SCENE_NAMES[id]) return;
+    e.preventDefault();
+    const fromSlate = slate && !slate.hidden;
+    if (fromSlate) closeSlate(false);
+    jumpTo(id);
+    /* focus leaves the closing slate — park it on the bar button */
+    if (fromSlate && barBtn) barBtn.focus();
+  });
+
+  /* Correct a plain-hash arrival (restored tab, shared link, a click that
+     ran without this handler): #credits must still end on the end card,
+     not the roll. */
+  if (SCENE_NAMES[location.hash.slice(1)]) {
+    requestAnimationFrame(() => jumpTo(location.hash.slice(1)));
+  }
+
+  let slateIsOpen = false;
+
+  function openSlate() {
+    if (!slate || slateIsOpen) return;
+    slateIsOpen = true;
+    lastFocus = document.activeElement;
+    slate.hidden = false;
+    /* two frames: display:none → laid out, then the transform animates in
+       from the closed state (see .scene-slate.is-open in style.css) */
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => slate.classList.add("is-open"))
+    );
+    /* same scroll lock as the full-frame viewer */
+    document.documentElement.style.overflow = "hidden";
+    if (barBtn) barBtn.setAttribute("aria-expanded", "true");
+    barLive = false;
+    bar.classList.remove("is-live");
+    const current = rows.find((r) => r.hasAttribute("aria-current")) || rows[0];
+    if (current) current.focus();
+  }
+
+  function closeSlate(restoreFocus) {
+    if (!slate || !slateIsOpen) return;
+    slateIsOpen = false;
+    slate.classList.remove("is-open");
+    if (barBtn) barBtn.setAttribute("aria-expanded", "false");
+    const finish = () => {
+      slate.hidden = true;
+      document.documentElement.style.overflow = "";
+      if (restoreFocus && lastFocus && document.contains(lastFocus)) lastFocus.focus();
+      paint();
+    };
+    if (prefersReduced) {
+      finish();
+      return;
+    }
+    /* let the panel slide down before display:none drops it; the timeout
+       backstops transitionend, which can be swallowed (resize-to-desktop
+       hides the slate via CSS mid-animation, so no transition runs) */
+    let done = false;
+    const onEnd = () => {
+      if (done) return;
+      done = true;
+      finish();
+    };
+    slate
+      .querySelector(".scene-slate-panel")
+      .addEventListener("transitionend", onEnd, { once: true });
+    setTimeout(onEnd, 450);
+  }
+
+  if (slate) {
+    slate.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeSlate(true);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusables = [slateClose, ...rows].filter(Boolean);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+    slate.querySelectorAll("[data-scene-close]").forEach((el) => {
+      el.addEventListener("click", () => closeSlate(true));
+    });
+  }
+
+  if (barBtn) {
+    barBtn.addEventListener("click", () => {
+      if (!slateIsOpen) openSlate();
+      else closeSlate(true);
+    });
+  }
+
+  /* One passive rAF-coalesced scroll listener serves both breakpoints —
+     added once here, never re-added, so nothing can duplicate across the
+     768px boundary (AGENTS: duplicate listeners across resizes). */
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onResize);
+  const mq = window.matchMedia("(min-width: 768px)");
+  const onMq = () => {
+    /* a slate left open across a resize-to-desktop must not strand */
+    closeSlate(false);
+    measure();
+    paint();
+  };
+  if (mq.addEventListener) mq.addEventListener("change", onMq);
+  else mq.addListener(onMq);
+
+  /* Measure after the pins exist (init() calls us last, same as initHud) */
+  measure();
+  paint();
+}
+
 /* ================= INIT ================= */
 
 function init() {
@@ -1283,6 +1615,7 @@ function init() {
      put the marks hundreds of px too high, so the HUD showed the credits
      timecode while the gear list was still on screen. */
   initHud();
+  initSceneNav();
 }
 
 if (document.readyState === "loading") {

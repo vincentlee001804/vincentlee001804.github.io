@@ -147,12 +147,29 @@ html.motion-on .grain { animation: grain-jitter 0.6s steps(4) infinite; }
 html.motion-on .light-leak::before { animation: leak-drift-a 11s ease-in-out infinite; }
 html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out infinite; }
 
-/* ---- timecode HUD ---- */
-.hud-timecode {
+/* ---- timecode HUD + scene ticks (desktop) ----
+   The HUD chip grows a cue strip above it: 00–06, one frame per cut. Hover or
+   focus reveals the scene name; clicking a frame hard-cuts to that cut (the
+   jump is instant — the cut itself is the transition, see initSceneNav).
+   The whole rail hides below 768px; phones get the scene bar instead. */
+.hud-nav {
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  right: 1rem;
+  bottom: 1rem;
   z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+  transition: bottom 0.3s ease;
+}
+/* When the back-to-top arrow fades in (end credits reached), lift the rail
+   just enough to stack above it as one right-edge column: 1rem arrow offset
+   + 2.75rem arrow + 0.5rem gap = 4.25rem. :has() ships in every modern
+   browser; without it the fallback is the arrow (z-index 110) covering the
+   chip. */
+body:has(> .back-top.is-visible) .hud-nav { bottom: 4.25rem; }
+.hud-timecode {
   font-family: var(--code);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -161,14 +178,61 @@ html.motion-on .light-leak::after  { animation: leak-drift-b 13s ease-in-out inf
   border: 1px solid rgba(240, 162, 2, 0.35);
   border-radius: 4px;
   padding: 0.35rem 0.65rem;
+  /* display-only chrome — the ticks own the interaction */
   pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
-/* Phone: the fixed chip floats over content and the home indicator. The
-   section kickers already carry the timecode in the copy — hide the chip
-   below 768px (initHud also idles its listeners there). */
+.hud-cuts {
+  display: flex;
+  gap: 2px;
+  background: rgba(11, 11, 14, 0.72);
+  border: 1px solid rgba(240, 162, 2, 0.35);
+  border-radius: 4px;
+  padding: 3px;
+}
+.hud-cut {
+  position: relative;
+  padding: 0.3rem 0.38rem;
+  font-family: var(--code);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--mute);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.hud-cut:hover,
+.hud-cut:focus-visible { color: var(--bone); }
+.hud-cut[aria-current] {
+  color: var(--safelight);
+  text-shadow: 0 0 8px rgba(240, 162, 2, 0.65);
+}
+/* scene name tooltip on hover/focus */
+.hud-cut::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--bone);
+  background: rgba(11, 11, 14, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.hud-cut:hover::after,
+.hud-cut:focus-visible::after { opacity: 1; }
+/* Phone: the fixed rail would float over content and the home indicator.
+   The scene bar owns navigation below 768px (initSceneNav idles nothing
+   there — one shared rAF-coalesced listener serves both sides). */
 @media (max-width: 767px) {
-  .hud-timecode { display: none; }
+  .hud-nav { display: none; }
 }
 .hud-timecode .hud-rec {
   display: inline-block;
@@ -1889,6 +1953,175 @@ html.motion-on .frame-view.is-open .frame-view-index {
 }
 @media (prefers-reduced-motion: reduce) {
   .back-top { transition: none; }
+}
+
+/* ---- scene bar + scene slate (mobile) ----
+   Below 768px the HUD rail is gone; a compact bottom bar carries the current
+   scene ("● 03 / 06 — THE REEL") plus a Scenes button that opens the
+   full-width slate. The bar stays hidden over the cold open and near the
+   end card, and never overlaps the back-to-top arrow (that only appears at
+   the end credits, where the bar is already hidden). z-index: below the
+   full-frame viewer (120), the back-to-top (110), and the viewfinder cursor
+   (130 — topmost, pointer-events:none, so it still renders above the bar). */
+.scene-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(11, 11, 14, 0.88);
+  border-top: 1px solid var(--line);
+  font-family: var(--code);
+  transform: translateY(102%);
+  visibility: hidden;
+  transition: transform 0.3s ease, visibility 0.3s ease;
+}
+.scene-bar.is-live {
+  transform: translateY(0);
+  visibility: visible;
+}
+.scene-bar-now {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bone);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-bar-dot { color: var(--safelight); margin-right: 0.4rem; }
+.scene-bar-btn {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  font-family: var(--code);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--safelight);
+  background: transparent;
+  border: 1px solid rgba(240, 162, 2, 0.45);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.scene-bar-btn:hover {
+  color: var(--bone);
+  border-color: rgba(240, 162, 2, 0.8);
+}
+@media (min-width: 768px) { .scene-bar { display: none; } }
+
+.scene-slate {
+  position: fixed;
+  inset: 0;
+  z-index: 118;
+}
+.scene-slate[hidden] { display: none; }
+/* Resizing to desktop while open closes it in JS (matchMedia swap) — this is
+   the no-JS backstop. */
+@media (min-width: 768px) { .scene-slate { display: none; } }
+.scene-slate-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.78);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+/* the slate is a bottom sheet: it slides up over the fading backdrop.
+   .is-open is added by openSlate a frame after hidden is lifted, so the
+   transform always animates from the closed state */
+.scene-slate.is-open .scene-slate-backdrop { opacity: 1; }
+.scene-slate-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 82vh;
+  max-height: 82dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--ink);
+  border-top: 1px solid rgba(240, 162, 2, 0.4);
+  padding: 1.1rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  transform: translateY(102%);
+  will-change: transform;
+  transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+.scene-slate.is-open .scene-slate-panel { transform: translateY(0); }
+.scene-slate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.scene-slate-kicker {
+  margin: 0;
+  font-family: var(--code);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.scene-slate-close {
+  min-width: 44px;
+  min-height: 44px;
+  font-family: var(--code);
+  color: var(--bone);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.scene-slate-close:hover {
+  color: var(--safelight);
+  border-color: rgba(240, 162, 2, 0.55);
+}
+.scene-slate-list { display: flex; flex-direction: column; }
+.scene-row {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 56px;
+  padding: 0.45rem 0.25rem;
+  text-decoration: none;
+  color: var(--bone);
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+.scene-row:last-child { border-bottom: 0; }
+.scene-row:active { background: rgba(240, 162, 2, 0.08); }
+.scene-row-num {
+  font-family: var(--code);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--mute);
+}
+.scene-row-name {
+  font-family: var(--display);
+  font-size: 1.7rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.scene-row-tc {
+  font-family: var(--code);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: var(--mute);
+}
+/* inset shadow, not a border — no layout shift when the marker moves */
+.scene-row[aria-current] { box-shadow: inset 2px 0 0 var(--safelight); }
+.scene-row[aria-current] .scene-row-num,
+.scene-row[aria-current] .scene-row-name { color: var(--safelight); }
+@media (prefers-reduced-motion: reduce) {
+  .scene-bar { transition: none; }
+  .scene-bar-btn, .hud-cut, .scene-row { transition: none; }
+  .scene-slate-panel, .scene-slate-backdrop { transition: none; }
 }
 
 /* ---- scroll reveals ----
