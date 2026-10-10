@@ -1382,11 +1382,22 @@ function initSceneNav() {
      top of the roll — the roll is the journey, the card is the destination.
      Active-scene tracking still keys off #credits' own top. */
   function targetTop(id) {
-    let target = document.getElementById(id);
+    /* The credits end card is an ABSOLUTE overlay on the 100dvh sticky
+       screen (motion-on), so its own rect is glued to the TOP of the roll
+       track — measuring it lands the visitor at the roll's first frame,
+       not the finale. The completed state lives at the end of the
+       ScrollTrigger scrub ("bottom bottom" on the track), i.e.
+       trackTop + trackHeight - viewport. The same formula is right without
+       GSAP: the card then sits in normal flow and the track's end is
+       exactly where it fills the screen. */
     if (id === "credits") {
-      const final = document.querySelector(".credits-final");
-      if (final) target = final;
+      const track = document.querySelector("#credits .credits-roll-track");
+      if (track) {
+        const top = track.getBoundingClientRect().top + window.scrollY;
+        return top + track.offsetHeight - window.innerHeight;
+      }
     }
+    const target = document.getElementById(id);
     if (!target) return null;
     const holder =
       target.parentElement && target.parentElement.classList.contains("pin-spacer")
@@ -1466,10 +1477,15 @@ function initSceneNav() {
 
   /* Correct a plain-hash arrival (restored tab, shared link, a click that
      ran without this handler): #credits must still end on the end card,
-     not the roll. */
-  if (SCENE_NAMES[location.hash.slice(1)]) {
-    requestAnimationFrame(() => jumpTo(location.hash.slice(1)));
-  }
+     not the roll. Fires at init AND again after load — the browser's own
+     fragment scroll lands around the load event and would otherwise stomp
+     an early correction. A second call mid-glide just re-targets. */
+  const correctHash = () => {
+    const id = location.hash.slice(1);
+    if (SCENE_NAMES[id]) jumpTo(id);
+  };
+  requestAnimationFrame(correctHash);
+  window.addEventListener("load", () => requestAnimationFrame(correctHash));
 
   let slateIsOpen = false;
 
