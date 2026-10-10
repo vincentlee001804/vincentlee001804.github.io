@@ -852,13 +852,26 @@ function initCreditsRoll() {
     },
   });
 
+  /* Re-timed with a finale hold. The roll parks its tail by 0.56, dissolves
+     by 0.72, the card rises 0.72 -> 0.84, and the last 16% of the scrub is a
+     HOLD: card pinned at opacity 1, roll pinned at 0. Without the hold the
+     card only reached opacity 1 at progress 1.0 — the exact footer boundary —
+     so reversing scroll even slightly re-exposed the roll (the mobile
+     glitch). The roll fades out BEFORE the card fades in: the two never
+     share the screen as readable layers. */
   tl.fromTo(list, { y: 0 }, {
     y: () => -(travel() - win.clientHeight * 0.28),
     ease: "none",
-    duration: 0.82,
+    duration: 0.56,
   }, 0);
 
-  if (card) tl.to(card, { opacity: 1, ease: "none", duration: 0.18 }, 0.82);
+  if (card) {
+    tl.to(list, { opacity: 0, ease: "none", duration: 0.14 }, 0.58);
+    tl.to(card, { opacity: 1, ease: "none", duration: 0.12 }, 0.72);
+    /* finale hold: explicit padding so scroll progress still maps 1:1 across
+       the whole track — the last stretch of scroll changes nothing */
+    tl.to({}, { duration: 0.16 }, 0.84);
+  }
 }
 
 /* ================= SCROLL REVEALS ================= */

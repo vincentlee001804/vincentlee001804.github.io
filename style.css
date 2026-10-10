@@ -2174,6 +2174,10 @@ html.motion-on .frame-view.is-open .frame-view-index {
      which reads as breathing room. Same for the end card at page bottom. */
   #cold-open,
   .credits-final { min-height: 100svh; }
+  /* the sticky is the end card's containing block under motion-on — it needs
+     the same svh basis, or the card resizes with the URL bar at the footer
+     boundary and the finale jumps */
+  html.motion-on .credits-sticky { height: 100svh; }
   .cold-open-inner { padding-block: 3rem 4rem; }
   #cold-open h1 { font-size: clamp(3rem, 13vw, 9rem); }
   #cold-open .mb-10 { margin-bottom: 1.25rem; }
