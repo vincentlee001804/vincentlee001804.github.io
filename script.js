@@ -83,7 +83,7 @@ const CALL_SHEET = [
     ],
   },
   {
-    prod: "ANCHR AI Labs", role: "AI Web Developer",
+    prod: "Women in Claude", role: "Freelance Web Developer",
     dates: "Jul 2026 – Aug 2026", loc: "Singapore · Remote",
     notes: [
       "Built and launched a responsive, media-rich post-event learning archive for the inaugural Women in Claude Live Build Showcase.",
@@ -198,6 +198,7 @@ const CREDITS = [
   { role: "Gaffer", name: "Ollama · Llama 3.1", cls: "" },
   { role: "Special thanks", name: "Team Tekkonologia", cls: "teal" },
   { role: "", name: "ANCHR AI Labs", cls: "teal" },
+  { role: "", name: "Women in Claude", cls: "teal" },
   { role: "", name: "UTS, Sibu", cls: "teal" },
   { role: "", name: "Xiaomi Community Malaysia", cls: "teal" },
   { role: "Shot on location", name: "Kuching, Sarawak", cls: "" },
