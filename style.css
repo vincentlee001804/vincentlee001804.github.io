@@ -1352,6 +1352,21 @@ html.motion-on .act-shot-stack .act-still-b {
   font-size: 0.7rem;
   top: 0.25em;
 }
+.call-notes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.1rem 0 1.15rem 1.15rem;
+  font-family: var(--code);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--safelight);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(240, 162, 2, 0.35);
+  padding-bottom: 0.1rem;
+}
+.call-notes-link:hover { color: var(--bone); border-color: var(--bone); }
 .call-caret {
   display: none;
 }

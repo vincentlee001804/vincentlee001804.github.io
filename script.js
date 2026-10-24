@@ -90,6 +90,10 @@ const CALL_SHEET = [
       "Designed pre-event feedback systems and used AI to analyse participant data, extracting key learning outcomes.",
       "Ensured 100% compliance with Singapore PDPA and MCCY public funding guidelines for digital publishing.",
     ],
+    link: {
+      url: "https://womeninclode.com/firstIRLevent/",
+      label: "View live archive ↗",
+    },
   },
   {
     prod: "Lee Tech News", role: "Social Media Content Creator",
@@ -327,6 +331,9 @@ function renderCallSheet() {
 
   html += CALL_SHEET.map((c, i) => {
     const notes = c.notes.map((n) => `<li>${n}</li>`).join("");
+    const link = c.link
+      ? `<a class="call-notes-link" href="${c.link.url}" target="_blank" rel="noopener">${c.link.label}</a>`
+      : "";
     return `<div class="call-row reveal">
         <button class="call-row-btn" type="button" aria-expanded="false" aria-controls="call-notes-${i}">
           <span class="call-prod">${c.prod}</span>
@@ -335,7 +342,7 @@ function renderCallSheet() {
           <span class="call-loc">${c.loc}</span>
         </button>
         <div class="call-notes" id="call-notes-${i}">
-          <div><ul>${notes}</ul></div>
+          <div><ul>${notes}</ul>${link}</div>
         </div>
       </div>`;
   }).join("");
