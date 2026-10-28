@@ -6,7 +6,7 @@
   --bone: #e8e4d9;
   --safelight: #f0a202;
   --teal: #2dd4bf;
-  --mute: #6b6b76;
+  --mute: #85858f;
   --line: #26262e;
   --display: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
   --body: "Inter", system-ui, -apple-system, sans-serif;
@@ -1120,8 +1120,11 @@ html.motion-on .act-shot-stack .act-still-b {
    overflow-x scroll container so every frame stays reachable by touch. An
    ungated max-content row without that container would be clipped by
    body { overflow-x: hidden } (content loss) — keep the scroll container.
-   reduced-motion keeps the static vertical stack of full-width frames. */
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+   reduced-motion keeps the static vertical stack of full-width frames. Short
+   coarse-pointer landscapes use the same native carousel: a pinned section
+   taller than the viewport would otherwise hide the cards and frame index. */
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference),
+  (min-width: 768px) and (pointer: coarse) and (max-height: 720px) and (prefers-reduced-motion: no-preference) {
   .reel-wrap {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -1170,6 +1173,14 @@ html.motion-on .act-shot-stack .act-still-b {
     width: min(78vw, 340px);
   }
 }
+/* In short-touch carousel mode the desktop rules above must not remove the
+   trailing snap room or stretch the 320px carousel cards. */
+@media (min-width: 768px) and (pointer: coarse) and (max-height: 720px) and (prefers-reduced-motion: no-preference) {
+  html.motion-on .reel-strip {
+    padding-right: calc(100% - 1.5rem - min(78vw, 320px));
+  }
+  html.motion-on .reel-card { width: min(78vw, 320px); }
+}
 
 /* frame index (01 — 05): only shown where the strip is actually a horizontal
    scroller — the mobile swipe carousel, or the desktop motion-on strip. */
@@ -1186,7 +1197,14 @@ html.motion-on .act-shot-stack .act-still-b {
   margin: 0.55rem 0 0.9rem;
 }
 .reel-swipe-hint { display: none; }
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+.reel-pointer-copy { display: none; }
+.reel-touch-copy { display: inline; }
+@media (hover: hover) and (pointer: fine) {
+  .reel-pointer-copy { display: inline; }
+  .reel-touch-copy { display: none; }
+}
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference),
+  (min-width: 768px) and (pointer: coarse) and (max-height: 720px) and (prefers-reduced-motion: no-preference) {
   .reel-index { display: block; }
   .reel-swipe-hint { display: inline; }
   /* tighter vertical rhythm on phones — the whole point of the carousel */
@@ -1195,6 +1213,15 @@ html.motion-on .act-shot-stack .act-still-b {
 }
 @media (min-width: 768px) {
   html.motion-on .reel-index { display: block; }
+}
+/* Keep the whole pinned Reel — including its frame index — inside short
+   landscape viewports. Below 721px, coarse pointers get the native carousel
+   above instead, so ordinary vertical scrolling can always reach everything. */
+@media (min-width: 768px) and (max-height: 850px) {
+  html.motion-on .reel-section { padding-top: 1rem; padding-bottom: 1rem; }
+  html.motion-on .reel-section > .max-w-6xl { margin-bottom: 1rem; }
+  html.motion-on .reel-section .reel-wrap { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+  html.motion-on .reel-index { margin-top: 0.25rem; margin-bottom: 0.5rem; }
 }
 
 /* static (default / reduced motion / no JS): a vertical stack of six complete
@@ -1537,6 +1564,38 @@ html.motion-on .act-shot-stack .act-still-b {
   flex-wrap: wrap;
   gap: 0.55rem;
 }
+.soft-skill {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  cursor: pointer;
+}
+.soft-skill-note {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.soft-skill-note > span {
+  overflow: hidden;
+  min-height: 0;
+  max-width: 32ch;
+  color: #a8a8b0;
+  font-size: 0.68rem;
+  line-height: 1.55;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease, padding-top 0.25s ease;
+}
+.soft-skill:focus-within:not(.is-collapsed),
+.soft-skill.is-open { border-color: rgba(240, 162, 2, 0.55); }
+.soft-skill:focus-within:not(.is-collapsed) .soft-skill-note,
+.soft-skill.is-open .soft-skill-note { grid-template-rows: 1fr; }
+.soft-skill:focus-within:not(.is-collapsed) .soft-skill-note > span,
+.soft-skill.is-open .soft-skill-note > span {
+  padding-top: 0.35rem;
+  opacity: 1;
+  transform: translateY(0);
+}
 
 @media (min-width: 768px) {
   .gear-grid {
@@ -1715,6 +1774,11 @@ html.motion-on .credits-final:focus-within {
   color: var(--mute);
 }
 .margin-note strong { color: var(--bone); font-weight: 500; }
+/* The 300px portrait rail leaves too little room for three nested note
+   columns on small tablets. Stack only the notes; preserve the main grid. */
+@media (min-width: 768px) and (max-width: 900px) {
+  #logline .margin-notes { grid-template-columns: 1fr; }
+}
 
 /* ---- portrait reveal ---- */
 .portrait-reveal {
@@ -1775,6 +1839,16 @@ html.motion-on .credits-final:focus-within {
   margin-top: 0.6rem;
 }
 
+/* Tablets use the desktop layout but still need touch-sized controls. Keep
+   these overrides input-specific so dense mouse layouts stay unchanged. */
+@media (min-width: 768px) and (pointer: coarse) {
+  .scrub-frame { width: 44px; height: 44px; }
+  .frame-expand { width: 2.75rem; height: 2.75rem; }
+  .gear-item { min-height: 44px; }
+  .slate-link,
+  .call-notes-link { min-height: 44px; }
+}
+
 /* ---- hover reveals (fine pointers only) ----
    Touch applies :hover on tap and keeps it latched, which pinned every payload
    open. Keyboard (:focus-within) and tap (.is-open) stay ungated above — this
@@ -1825,6 +1899,12 @@ html.motion-on .credits-final:focus-within {
     transform: translateY(0);
   }
   .portrait-reveal:hover:not(.is-collapsed) .portrait-payload {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .soft-skill:hover:not(.is-collapsed) .soft-skill-note { grid-template-rows: 1fr; }
+  .soft-skill:hover:not(.is-collapsed) .soft-skill-note > span {
+    padding-top: 0.35rem;
     opacity: 1;
     transform: translateY(0);
   }
@@ -2039,6 +2119,13 @@ html.motion-on .frame-view.is-open .frame-view-index {
 /* Resizing to desktop while open closes it in JS (matchMedia swap) — this is
    the no-JS backstop. */
 @media (min-width: 768px) { .scene-slate { display: none; } }
+/* Touch tablets need visible scene names and large navigation targets too.
+   Reuse the phone scene bar/slate instead of the number-only hover HUD. */
+@media (min-width: 768px) and (pointer: coarse) {
+  .hud-nav { display: none; }
+  .scene-bar { display: flex; }
+  .scene-slate { display: block; }
+}
 .scene-slate-backdrop {
   position: absolute;
   inset: 0;
@@ -2262,6 +2349,13 @@ html.motion-on .frame-view.is-open .frame-view-index {
   .call-notes ul { opacity: 1 !important; transform: none !important; }
   .gear-note { grid-template-rows: 1fr !important; }
   .gear-note > div { opacity: 1 !important; transform: none !important; }
+  .soft-skill-note { grid-template-rows: 1fr !important; }
+  .soft-skill-note > span {
+    padding-top: 0.35rem;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+  }
   .cursor-view { display: none !important; }
   html.has-cursor, html.has-cursor * { cursor: auto !important; }
 }

@@ -176,7 +176,7 @@ const GEAR = [
         { name: "Clerk auth", note: "contentremixhelper admin panel", icon: "clerk", color: "6C47FF" },
         { name: "Cloudflare", note: "Women in Claude archive live", icon: "cloudflare", color: "F38020" },
         { name: "Render", note: "roboadvisor deployed", icon: "render", color: "46E3B7" },
-        { name: "CapCut", note: "hackathon reels & interview highlights", icon: "capcut", color: "C9D1D9" },
+        { name: "CapCut", note: "hackathon reels & interview highlights", icon: null },
       ]},
     ],
   },
@@ -281,7 +281,7 @@ function renderReel() {
             <div class="develop-slate">
               <div class="slate-top"><span>${p.lang} · ${p.year}</span><span>Frame ${p.frame}</span></div>
               <h3>${p.name}</h3>
-              <p class="text-[#6b6b76] text-[0.78rem] leading-relaxed mb-2">${p.desc}</p>
+              <p class="text-[#85858f] text-[0.78rem] leading-relaxed mb-2">${p.desc}</p>
               <p class="signal-line">${signalHtml(p.signal)}</p>
               <div class="slate-chips">${chips}${award}</div>
               ${link}
@@ -306,7 +306,7 @@ function renderReel() {
           <div class="develop-slate">
             <div class="slate-top"><span>Archive</span><span>Frame 05A</span></div>
             <h3>More in the can</h3>
-            <p class="text-[#6b6b76] text-[0.78rem] leading-relaxed mb-2">Eleven more cuts in the vault — robo-advisor with receipt OCR, education platforms, booking systems, deep-learning pipelines.</p>
+            <p class="text-[#85858f] text-[0.78rem] leading-relaxed mb-2">Eleven more cuts in the vault — robo-advisor with receipt OCR, education platforms, booking systems, deep-learning pipelines.</p>
             <p class="signal-line">[curiosity] <span class="sig-arrow">→</span> [15+ repos]</p>
             <a class="slate-link" href="${GITHUB_REPOS}" target="_blank" rel="noopener">View all repos on GitHub ↗</a>
           </div>
@@ -391,7 +391,10 @@ function renderGear() {
   const soft = document.getElementById("soft-skills");
   if (soft) {
     soft.innerHTML = SOFT_SKILLS
-      .map((s) => `<span class="fact-chip" title="${s.note}">${s.name}</span>`)
+      .map((s) => `<span class="fact-chip soft-skill" data-reveal tabindex="0" role="button" aria-expanded="false">
+          <span class="soft-skill-label">${s.name}</span>
+          <span class="soft-skill-note"><span>${s.note}</span></span>
+        </span>`)
       .join("");
   }
 }
@@ -488,6 +491,7 @@ function initReveals() {
   bindGroup(Array.from(document.querySelectorAll(".develop-card")));
   bindGroup(Array.from(document.querySelectorAll(".portrait-reveal")));
   bindGroup(Array.from(document.querySelectorAll(".gear-item")));
+  bindGroup(Array.from(document.querySelectorAll(".soft-skill")));
 
   const rows = Array.from(document.querySelectorAll(".call-row"));
   rows.forEach((row) => {
@@ -594,7 +598,7 @@ function initHud() {
     window.removeEventListener("resize", onResize);
   }
 
-  const mq = window.matchMedia("(min-width: 768px)");
+  const mq = window.matchMedia("(min-width: 768px) and (pointer: fine)");
   const apply = () => (mq.matches ? start() : stop());
   if (mq.addEventListener) mq.addEventListener("change", apply);
   else mq.addListener(apply);
@@ -749,11 +753,18 @@ function initReelIndex() {
   }
   function paint() {
     if (!cards.length) return;
-    const x = wrap.scrollLeft;
+    const centre = wrap.scrollLeft + wrap.clientWidth / 2;
     let idx = 0;
-    for (let i = 0; i < cards.length; i++) {
-      if (cards[i].offsetLeft <= x + 4) idx = i;
-    }
+    let nearest = Infinity;
+    /* The last card snaps centre, so its left edge never crosses scrollLeft.
+       Track the card nearest the viewport centre instead — including frame 05. */
+    cards.forEach((card, i) => {
+      const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - centre);
+      if (distance < nearest) {
+        nearest = distance;
+        idx = i;
+      }
+    });
     setReelIndexLabel(idx, cards.length);
   }
 
@@ -763,9 +774,9 @@ function initReelIndex() {
   window.addEventListener("resize", () => { measure(); paint(); }, { passive: true });
 }
 
-/* >=768px: the pinned, scrubbed storyscroll. Desktop only — below 768px the
-   Reel is a native swipe carousel and initReelIndex paints the frame index
-   from wrap.scrollLeft.
+/* >=768px: the pinned, scrubbed storyscroll, except short coarse-pointer
+   landscapes. In either native-carousel mode initReelIndex paints the frame
+   index from wrap.scrollLeft.
 
    OWNERSHIP: this is the only tween allowed to touch #reel-strip's transform.
    initReelIntro animates .reel-wrap instead — an overwrite:true tween on the
@@ -817,14 +828,21 @@ function initReelScrollMode() {
   if (!strip || !wrap) return;
 
   let stop = null;
+  const desktopMq = window.matchMedia("(min-width: 768px)");
+  const shortTouchMq = window.matchMedia("(pointer: coarse) and (max-height: 720px)");
   function apply() {
     if (stop) { stop(); stop = null; }
-    stop = isDesktop() ? startReelPin(strip, wrap) : () => {};
+    wrap.scrollLeft = 0;
+    /* A short touch landscape cannot show a tall pinned Reel and its index at
+       once. The matching CSS media query gives it the native swipe carousel;
+       wider/taller desktops keep the cinematic scrub. */
+    stop = desktopMq.matches && !shortTouchMq.matches ? startReelPin(strip, wrap) : () => {};
   }
 
-  const mq = window.matchMedia("(min-width: 768px)");
-  if (mq.addEventListener) mq.addEventListener("change", apply);
-  else if (mq.addListener) mq.addListener(apply);
+  [desktopMq, shortTouchMq].forEach((mq) => {
+    if (mq.addEventListener) mq.addEventListener("change", apply);
+    else if (mq.addListener) mq.addListener(apply);
+  });
   apply();
 }
 
