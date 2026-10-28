@@ -607,7 +607,7 @@ function initHud() {
 
 /* ================= ACTS ================= */
 
-/* Scrubber highlight, shared by the desktop pin and the mobile carousel. */
+/* Scrubber highlight, shared by the desktop pin and the native carousel. */
 function makeSetActive(frames) {
   let active = -1;
   return (idx) => {
@@ -620,8 +620,8 @@ function makeSetActive(frames) {
   };
 }
 
-/* >=768px: the pinned, scrubbed stage. buildActsTl owns the grammar and must
-   not change — titles cut at 0.02, shots cross-fade at 0.4s. */
+/* Fine-pointer desktops >1024px: the pinned, scrubbed stage. buildActsTl owns
+   the grammar and must not change — titles cut at 0.02, shots cross-fade at 0.4s. */
 function startPinActs(shots, metas, frames, setActive, setJump) {
   if (!hasGsap) return () => {};
   gsap.set(shots, { opacity: 0 });
@@ -631,8 +631,8 @@ function startPinActs(shots, metas, frames, setActive, setJump) {
   const st = ScrollTrigger.create({
     trigger: ".feature-pin",
     start: "top top",
-    /* Desktop only — below 768px the acts are a swipe carousel (see
-       startActCarousel), so phones get no pin and no scroll-jacking. */
+    /* Phones, tablets and coarse pointers use startActCarousel instead, so
+       touch visitors get no pin and no scroll-jacking. */
     end: "+=3200",
     pin: true,
     scrub: 0.6,
@@ -658,9 +658,9 @@ function startPinActs(shots, metas, frames, setActive, setJump) {
   };
 }
 
-/* <=767px: a swipe carousel of paired slides. Pure CSS scroll-snap does the
-   gesture; this only drives the scrubber highlight and jump-to-act. One
-   passive scroll listener — no rAF loop. */
+/* <=1024px and coarse pointers: a swipe carousel of paired slides. Pure CSS
+   scroll-snap does the gesture; this only drives the scrubber highlight and
+   jump-to-act. One passive scroll listener — no rAF loop. */
 function startActCarousel(slides, frames, setActive, setJump) {
   const track = document.getElementById("act-track");
   if (!track || !slides.length) return () => {};
@@ -677,7 +677,11 @@ function startActCarousel(slides, frames, setActive, setJump) {
 
   setJump((i) => {
     const s = slides[i];
-    if (s) s.scrollIntoView({ inline: "start", block: "nearest", behavior: prefersReduced ? "auto" : "smooth" });
+    if (s) s.scrollIntoView({
+      inline: i === slides.length - 1 ? "center" : "start",
+      block: "nearest",
+      behavior: prefersReduced ? "auto" : "smooth",
+    });
   });
 
   track.addEventListener("scroll", paint, { passive: true });
@@ -704,17 +708,17 @@ function initActsMode() {
   frames.forEach((f) => f.addEventListener("click", () => jump(Number(f.dataset.act))));
 
   let stop = null;
+  const carouselMq = window.matchMedia("(max-width: 1024px), (pointer: coarse)");
   function apply() {
     if (stop) { stop(); stop = null; }
-    stop = isDesktop()
-      ? startPinActs(shots, metas, frames, setActive, (fn) => { jump = fn; })
-      : startActCarousel(slides, frames, setActive, (fn) => { jump = fn; });
+    stop = carouselMq.matches
+      ? startActCarousel(slides, frames, setActive, (fn) => { jump = fn; })
+      : startPinActs(shots, metas, frames, setActive, (fn) => { jump = fn; });
     setActive(0);
   }
 
-  const mq = window.matchMedia("(min-width: 768px)");
-  if (mq.addEventListener) mq.addEventListener("change", apply);
-  else if (mq.addListener) mq.addListener(apply);
+  if (carouselMq.addEventListener) carouselMq.addEventListener("change", apply);
+  else if (carouselMq.addListener) carouselMq.addListener(apply);
   apply();
 }
 

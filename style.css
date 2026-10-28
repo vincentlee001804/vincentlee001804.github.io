@@ -787,13 +787,10 @@ body:has(> .back-top.is-visible) .hud-nav { bottom: 4.25rem; }
 /* Pinned act frame: full-viewport letterbox with the shot optically centred
    in the aperture between the bars. Without this the frame is content-height
    and top-aligned, leaving dead space below the scrubber.
-   DESKTOP ONLY (>=768px): on phones there is no pin — making .feature-pin a
-   flex column puts the content wrapper in min-width:auto, whose min-content
-   is the scrub strip; that min-content (wider than any phone) blows the
-   wrapper out to ~891px, and the %-based carousel + full-bleed track then
-   resolve against that width instead of the viewport. The min-height:100dvh
-   centring also opens dead bands above/below the carousel on mobile. */
-@media (min-width: 768px) {
+   FINE-POINTER DESKTOP ONLY (>1024px): phones, tablets and coarse pointers use
+   the native carousel. Pinning or flex-centring those modes can clip the stage
+   and scrubber, especially when a tablet browser's viewport changes height. */
+@media (min-width: 1025px) and (pointer: fine) {
   html.motion-on .feature-pin {
     min-height: 100vh;
     min-height: 100dvh;
@@ -901,16 +898,16 @@ body:has(> .back-top.is-visible) .hud-nav { bottom: 4.25rem; }
 /* motion-on screening stage — three modes:
    (a) default / reduced-motion / no JS: .act-track is a vertical stack of six
        complete acts (shot + its meta) — see the static block later in the file.
-   (b) >=768px: the pinned, scrubbed stage. .act-track and .act-slide become
-       display: contents so each shot and meta drops back into .feature-stage's
-       two-column grid, explicitly placed so all six shots stack in the left
-       cell and all six metas in the right. Shots cross-fade in their cell,
-       titles cut in theirs.
-   (c) <=767px: a swipe carousel of paired slides. No pin, so there is nothing
-       to cut or cross-fade between — the cut/cross-fade grammar belongs to (b).
+   (b) fine-pointer desktops >1024px: the pinned, scrubbed stage. .act-track
+       and .act-slide become display: contents so each shot and meta drops back
+       into .feature-stage's two-column grid, explicitly placed so all six shots
+       stack in the left cell and all six metas in the right. Shots cross-fade
+       in their cell, titles cut in theirs.
+   (c) <=1024px and coarse pointers: a swipe carousel of paired slides. No pin,
+       so browser chrome and dynamic tablet viewports cannot clip the playhead.
        Scroll container is mandatory: an ungated max-content row would be
        clipped by body { overflow-x: hidden } and its slides unreachable. */
-@media (min-width: 768px) {
+@media (min-width: 1025px) and (pointer: fine) {
   html.motion-on .feature-stage {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
@@ -940,11 +937,10 @@ body:has(> .back-top.is-visible) .hud-nav { bottom: 4.25rem; }
     padding-left: 0;
   }
 }
-@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  /* Gated exactly like the Reel carousel (see .reel-wrap below): the acts
-     carousel is pure CSS scroll-snap and must not depend on html.motion-on,
-     or a GSAP hiccup drops mobile to the static vertical stack of all six
-     acts — a long document that reads as a desktop page. The child selectors
+@media (max-width: 1024px) and (prefers-reduced-motion: no-preference),
+  (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  /* Pure CSS scroll-snap must not depend on html.motion-on, or a GSAP hiccup
+     drops touch/tablet visitors into the long static stack. The child selectors
      out-specify the static .act-track/.act-slide rules further down. */
   .feature-stage > .act-track {
     /* FULL-BLEED: the carousel must span the viewport, not the content
