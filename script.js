@@ -1296,13 +1296,13 @@ function initReelAutoDevelop() {
    jumps stay instant). Links are real anchors, so no-JS visitors keep
    ordinary hash navigation. */
 const SCENE_NAMES = {
-  "cold-open": "Cold Open",
-  logline: "Logline",
-  feature: "Six Acts",
-  reel: "The Reel",
-  "call-sheet": "Call Sheet",
-  gear: "Gear",
-  credits: "End Credits",
+  "cold-open": "Home",
+  logline: "About",
+  feature: "Journey",
+  reel: "Projects",
+  "call-sheet": "Experience",
+  gear: "Skills",
+  credits: "Contact",
 };
 
 function initSceneNav() {
