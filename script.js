@@ -226,7 +226,9 @@ const GITHUB_REPOS = "https://github.com/vincentlee001804?tab=repositories";
 /* ================= ENVIRONMENT ================= */
 
 const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+const finePointerMq = window.matchMedia("(hover: hover) and (pointer: fine)");
+const isFinePointer = () => window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+const finePointer = isFinePointer();
 const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
 const motionOn = hasGsap && !prefersReduced;
 const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
@@ -737,11 +739,20 @@ function buildActsTl(shots, metas) {
 
 /* ================= REEL (horizontal) ================= */
 
+/* initReelAutoDevelop installs the shared active-card driver. Keeping this
+   beside the index means the visible frame number and developed card can never
+   disagree, regardless of whether a pin or native swipe produced the update. */
+let driveReelCard = () => {};
+let syncReelInputMode = () => {};
+
 function setReelIndexLabel(idx, total) {
   const out = document.getElementById("reel-index");
-  if (!out || !total) return;
-  const pad = (n) => String(n).padStart(2, "0");
-  out.textContent = `${pad(idx + 1)} — ${pad(total)}`;
+  if (out && total) {
+    const pad = (n) => String(n).padStart(2, "0");
+    out.textContent = `${pad(idx + 1)} — ${pad(total)}`;
+  }
+  syncReelInputMode();
+  driveReelCard(idx);
 }
 
 /* Mobile: the strip is a native horizontal scroller, so paint the frame index
@@ -757,18 +768,20 @@ function initReelIndex() {
   }
   function paint() {
     if (!cards.length) return;
-    const centre = wrap.scrollLeft + wrap.clientWidth / 2;
+    const x = wrap.scrollLeft;
+    const snapStart = x + 28; /* 24px scroll padding + 4px tolerance */
     let idx = 0;
-    let nearest = Infinity;
-    /* The last card snaps centre, so its left edge never crosses scrollLeft.
-       Track the card nearest the viewport centre instead — including frame 05. */
+    /* Native cards snap start, so frame 01 always owns scrollLeft 0 — even
+       when two complete cards fit on a wide tablet. */
     cards.forEach((card, i) => {
-      const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - centre);
-      if (distance < nearest) {
-        nearest = distance;
-        idx = i;
-      }
+      if (card.offsetLeft <= snapStart) idx = i;
     });
+    /* The last card snaps centre instead, so its left edge never reaches the
+       start marker. Detect that end state explicitly to reach frame 05. */
+    const last = cards[cards.length - 1];
+    const centre = x + wrap.clientWidth / 2;
+    const lastCentre = last.offsetLeft + last.offsetWidth / 2;
+    if (Math.abs(lastCentre - centre) < 2) idx = cards.length - 1;
     setReelIndexLabel(idx, cards.length);
   }
 
@@ -1139,7 +1152,7 @@ function initFrameView() {
        revealed even after auto-develop moves on — the stuck-open card bug.
        Leaving focus on <body> there keeps auto-drive in charge of the
        reveal. */
-    if (returnTo && finePointer && returnTo.focus) returnTo.focus();
+    if (returnTo && isFinePointer() && returnTo.focus) returnTo.focus();
     returnTo = null;
   }
 
@@ -1164,30 +1177,39 @@ function initFrameView() {
      slate still navigate normally; cards without a real image ("More in the
      can") keep their toggle. Enter/Space on a focused card synthesizes a
      click, which this same capture path turns into "open". */
-  if (!finePointer) {
-    const stripEl = document.getElementById("reel-strip");
-    if (stripEl) {
-      stripEl.addEventListener("click", (e) => {
-        if (e.target.closest("a")) return;
-        const card = e.target.closest(".develop-card");
-        if (!card) return;
-        const imgEl = card.querySelector(".develop-media img");
-        if (!imgEl) return;
-        const i = frames.findIndex((f) => f.src === imgEl.getAttribute("src"));
-        if (i < 0) return;
-        e.preventDefault();
-        e.stopPropagation();
-        open(i);
-      }, true);
-      /* The card's static label says "reveal details" — on touch it opens the
-         full frame now, so keep the accessible name honest. */
+  const stripEl = document.getElementById("reel-strip");
+  if (stripEl) {
+    stripEl.addEventListener("click", (e) => {
+      /* Always bind: a desktop session can become coarse without reloading.
+         Fine pointers keep the original card toggle and separate ⤢ button. */
+      if (isFinePointer() || e.target.closest("a")) return;
+      const card = e.target.closest(".develop-card");
+      if (!card) return;
+      const imgEl = card.querySelector(".develop-media img");
+      if (!imgEl) return;
+      const i = frames.findIndex((f) => f.src === imgEl.getAttribute("src"));
+      if (i < 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      open(i);
+    }, true);
+
+    function syncCardLabels() {
       stripEl.querySelectorAll(".develop-card").forEach((card) => {
         const imgEl = card.querySelector(".develop-media img");
         if (!imgEl) return;
         const f = frames.find((fr) => fr.src === imgEl.getAttribute("src"));
-        if (f) card.setAttribute("aria-label", `${f.name} — view full frame`);
+        if (!f) return;
+        const label = isFinePointer()
+          ? `${f.name} — reveal details`
+          : `${f.name} — view full frame`;
+        if (card.getAttribute("aria-label") !== label) card.setAttribute("aria-label", label);
       });
     }
+    syncReelInputMode = syncCardLabels;
+    syncCardLabels();
+    if (finePointerMq.addEventListener) finePointerMq.addEventListener("change", syncCardLabels);
+    else if (finePointerMq.addListener) finePointerMq.addListener(syncCardLabels);
   }
 
   view.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", close));
@@ -1235,54 +1257,97 @@ function initBackToTop() {
   io.observe(target);
 }
 
-/* ================= REEL AUTO-DEVELOP (touch) ================= */
+/* ================= REEL AUTO-DEVELOP ================= */
 
-/* Hover is gated to fine pointers, so on a phone the develop slate is otherwise
-   undiscoverable. This develops whichever card is most on screen, mirroring
-   bindGroup's one-at-a-time exclusivity.
+/* The frame index owns automatic development. Touch gets a one-at-a-time reveal
+   on every index change; fine pointers get frame 01 developed on arrival, then
+   keep their normal hover/focus/click model. Because the current media query is
+   checked on every drive, desktop ↔ touch switching works without a reload.
 
-   A click takes ownership of a card (data-userToggled): bindGroup keeps full
-   control of it and auto-drive stands down entirely until it leaves the
-   viewport. So auto-reveal can never re-open something the visitor just
-   closed, and never close something they just opened.
-
-   Deliberately no `once: true` and no extra scroll listener (initReelIndex
-   already owns that one) — IntersectionObserver is its own trigger. */
+   A click takes ownership (data-userToggled) until that card leaves the viewport.
+   IntersectionObserver is used ONLY to release that ownership — never to choose
+   the active card — so asynchronous observer ratios cannot skip frame 01 or jump
+   ahead of the 01–05 index. */
 function initReelAutoDevelop() {
-  if (finePointer) return;
   const cards = Array.from(document.querySelectorAll(".develop-card"));
-  if (cards.length < 2 || typeof IntersectionObserver === "undefined") return;
+  if (cards.length < 2 || prefersReduced) return;
 
-  const ratio = new Map();
-  cards.forEach((c) => ratio.set(c, 0));
+  let currentIdx = 0;
+  let desktopInteracted = false;
+  let lastFine = isFinePointer();
 
-  function drive() {
-    if (cards.some((c) => c.dataset.userToggled)) return;
-    let best = null;
-    let bestRatio = 0;
-    ratio.forEach((r, card) => {
-      if (r > bestRatio) { bestRatio = r; best = card; }
-    });
+  function show(card) {
     cards.forEach((c) => {
-      const open = c === best && bestRatio > 0.55;
-      c.classList.toggle("is-open", open);
-      c.setAttribute("aria-expanded", open ? "true" : "false");
+      const open = c === card;
+      if (c.classList.contains("is-open") !== open) c.classList.toggle("is-open", open);
+      const aria = open ? "true" : "false";
+      if (c.getAttribute("aria-expanded") !== aria) c.setAttribute("aria-expanded", aria);
     });
   }
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      ratio.set(e.target, e.isIntersecting ? e.intersectionRatio : 0);
-      if (!e.isIntersecting) delete e.target.dataset.userToggled;
-    });
-    drive();
-  }, { threshold: [0, 0.25, 0.55, 0.8, 1] });
+  function drive(idx) {
+    currentIdx = Math.max(0, Math.min(cards.length - 1, idx));
+    const fine = isFinePointer();
+    /* Check the mode transition here too, not only in the media-query event.
+       The next index update must work even if the browser delivers that event
+       late during emulation, rotation or a detachable-keyboard change. */
+    if (fine !== lastFine) {
+      lastFine = fine;
+      desktopInteracted = false;
+      cards.forEach((c) => delete c.dataset.userToggled);
+    }
+    if (cards.some((c) => c.dataset.userToggled)) return;
+    if (fine) {
+      if (desktopInteracted) return;
+      show(currentIdx === 0 ? cards[0] : null);
+      return;
+    }
+    show(cards[currentIdx]);
+  }
+  driveReelCard = drive;
 
-  cards.forEach((c) => {
-    c.addEventListener("click", () => { c.dataset.userToggled = "1"; }, true);
-    io.observe(c);
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      card.dataset.userToggled = "1";
+      if (isFinePointer()) desktopInteracted = true;
+    }, true);
+
+    /* Desktop's initial developed frame must not remain open beside a hovered
+       or focused neighbour. Once the visitor takes over, hover/focus owns the
+       presentation until the input mode changes. */
+    const takeDesktopControl = () => {
+      if (!isFinePointer()) return;
+      desktopInteracted = true;
+      cards.forEach((other) => {
+        if (other === card) return;
+        other.classList.remove("is-open");
+        other.setAttribute("aria-expanded", "false");
+      });
+    };
+    card.addEventListener("mouseenter", takeDesktopControl);
+    card.addEventListener("focusin", takeDesktopControl);
   });
-  drive();
+
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting || !e.target.dataset.userToggled) return;
+        delete e.target.dataset.userToggled;
+        drive(currentIdx);
+      });
+    }, { threshold: 0 });
+    cards.forEach((c) => io.observe(c));
+  }
+
+  const onPointerChange = () => drive(currentIdx);
+  if (finePointerMq.addEventListener) finePointerMq.addEventListener("change", onPointerChange);
+  else if (finePointerMq.addListener) finePointerMq.addListener(onPointerChange);
+
+  /* Pins and native scrollers have already painted their index by this point.
+     Honour a mid-Reel reload, but make the normal 01 — 05 entry deterministic. */
+  const label = document.getElementById("reel-index");
+  const initialIdx = label ? Number.parseInt(label.textContent, 10) - 1 : 0;
+  drive(Number.isFinite(initialIdx) && initialIdx >= 0 ? initialIdx : 0);
 }
 
 /* ================= SCENE NAV ================= */
