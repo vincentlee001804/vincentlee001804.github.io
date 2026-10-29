@@ -1432,7 +1432,7 @@ html.motion-on .act-shot-stack .act-still-b {
 .gear-unit + .gear-unit { margin-top: 2.4rem; }
 .gear-unit.is-first .gear-sprocket { display: none; }
 .gear-group { margin-bottom: 0; }
-.gear-group h4 {
+.gear-group h3 {
   font-family: var(--code);
   font-size: 0.62rem;
   letter-spacing: 0.14em;

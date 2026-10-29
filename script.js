@@ -6,211 +6,6 @@
 
 /* ================= DATA ================= */
 
-const ACT_LABELS = ["I", "II", "III", "IV", "V", "VI"];
-
-const PROJECTS = [
-  {
-    frame: "01A", name: "KitchenCurator", lang: "TypeScript", year: "2026",
-    desc: "Smart food expiry tracker that alerts before food goes bad, then auto-generates step-by-step composting guides.",
-    signal: ["expiry data", "smart tracking", "alerts + composting guides"],
-    chips: ["TypeScript", "Web app"],
-    award: "🏆 Grand Winner · TFE × SCENT",
-    slot: "reel-01", slotFile: "assets/reel-01.webp",
-    image: "assets/reel-01.webp",
-    alt: "KitchenCurator — food expiry tracker dashboard",
-    link: null,
-  },
-  {
-    frame: "02A", name: "ApaNewsHariTok", lang: "Python", year: "2025–2026",
-    desc: "Sarawak local-news bot on Telegram powered by a locally hosted LLM — ~30-word summaries, categories, urgent alerts.",
-    signal: ["Sarawak RSS", "Ollama · Llama 3.1", "Telegram digests"],
-    chips: ["Python", "Final Year Project", "SDG 11"],
-    award: null,
-    slot: "reel-02", slotFile: "assets/reel-02.webp",
-    image: "assets/reel-02.webp",
-    alt: "ApaNewsHariTok — Sarawak news digest bot",
-    link: null,
-  },
-  {
-    frame: "03A", name: "adailocal", lang: "Python", year: "2026",
-    desc: "Feishu news push bot, Malaysia-first — collects, summarises, classifies and pushes interactive cards to Lark groups.",
-    signal: ["Malaysia RSS", "AI classify + summarise", "Feishu / Lark cards"],
-    chips: ["Python", "Public repo"],
-    award: null,
-    slot: "reel-03", slotFile: "assets/reel-03.webp",
-    image: "assets/reel-03.webp",
-    alt: "adailocal — Malaysia news cards in Feishu / Lark",
-    link: "https://github.com/vincentlee001804?tab=repositories",
-  },
-  {
-    frame: "04A", name: "n8n-xiaomi-tech-news", lang: "n8n", year: "2026",
-    desc: "Scheduled n8n workflows watching Xiaomi launches and aggregating tech news, with a global Telegram error handler.",
-    signal: ["Xiaomi stores + RSS", "n8n workflows", "Bitable + Telegram"],
-    chips: ["n8n", "Automation"],
-    award: null,
-    slot: "reel-04", slotFile: "assets/reel-04.webp",
-    image: "assets/reel-04.webp",
-    alt: "n8n-xiaomi-tech-news — scheduled Xiaomi watch workflow",
-    link: null,
-  },
-];
-
-const OTHER_WORK = [
-  { name: "contentremixhelper", lang: "TypeScript" },
-  { name: "leetechnews-draft-assistant", lang: "TypeScript" },
-  { name: "Crisp-Lab-POS-System", lang: "TypeScript" },
-  { name: "social_media_ai_platform", lang: "TypeScript" },
-  { name: "education_website", lang: "HTML" },
-  { name: "academic-website", lang: "TypeScript" },
-  { name: "roboadvisor", lang: "HTML" },
-  { name: "servease", lang: "JavaScript" },
-  { name: "ai_assignment", lang: "Python" },
-  { name: "ai_final_assignment", lang: "Python" },
-  { name: "wic-learning-archive", lang: "HTML" },
-];
-
-const CALL_SHEET = [
-  {
-    prod: "ANCHR AI Labs", role: "Technical Facilitator & AI Youth Ambassador",
-    dates: "Sep 2026 · 1 mo", loc: "Kuching",
-    notes: [
-      "Served as a Singapore AI Youth Ambassador Network 2026 (SAIYAN) and technical facilitator for the AI Friendship Design Hackathon 2026.",
-      "Mentored and guided 11 participant teams through a high-pressure, 2-day sprint to build live sites for local Sarawakian SMEs.",
-      "Ran hands-on technical troubleshooting, helping participants leverage Kimi AI to accelerate coding and deployment.",
-      "Directed and filmed on-site interviews capturing project milestones and insights on AI integration.",
-      "Edited fast-paced event reels and interview highlights in CapCut for official social campaigns.",
-      "Collaborated with a four-person facilitation team to keep deliverables on technical standard.",
-    ],
-  },
-  {
-    prod: "Women in Claude", role: "Freelance Web Developer",
-    dates: "Jul 2026 – Aug 2026", loc: "Singapore · Remote",
-    notes: [
-      "Built and launched a responsive, media-rich post-event learning archive for the inaugural Women in Claude Live Build Showcase.",
-      "Designed pre-event feedback systems and used AI to analyse participant data, extracting key learning outcomes.",
-      "Ensured 100% compliance with Singapore PDPA and MCCY public funding guidelines for digital publishing.",
-    ],
-    link: {
-      url: "https://womeninclode.com/firstIRLevent/",
-      label: "View live archive ↗",
-    },
-  },
-  {
-    prod: "Lee Tech News", role: "Social Media Content Creator",
-    dates: "Mar 2023 – Present", loc: "Malaysia · Self-employed",
-    notes: [
-      "Created tech content across social platforms covering Xiaomi products, AI developments and semiconductor news.",
-      "Grew brand presence through product promotion and engagement strategies reaching 148+ impressions per post.",
-      "Built an active tech community presence around Xiaomi and AI silicon coverage.",
-    ],
-  },
-  {
-    prod: "Harmony Mobile", role: "Social Media Content Creator",
-    dates: "Nov 2022 – Present", loc: "Kuching · Part-time",
-    notes: [
-      "Managed Instagram advertising and product promotion campaigns for mobile device sales.",
-      "Developed promotional content strategies driving customer engagement and brand visibility.",
-    ],
-  },
-  {
-    prod: "Xiaomi Community MY", role: "Moderator",
-    dates: "Ongoing", loc: "Malaysia",
-    notes: [
-      "Support and engage with tech enthusiasts, fostering discussions and building connections among Xiaomi fans.",
-    ],
-  },
-  {
-    prod: "Jump Retail", role: "Xiaomi Sales Promoter",
-    dates: "Aug 2022 – Nov 2022", loc: "Kuching · On-site",
-    notes: [
-      "Executed sales promotion and social promotion strategies for Xiaomi product lines.",
-      "Delivered product demonstrations and customer engagement to drive in-store sales.",
-    ],
-  },
-];
-
-const GEAR = [
-  {
-    column: "Above the line",
-    groups: [
-      { title: "Languages", items: [
-        { name: "Python", note: "ApaNewsHariTok · adailocal · CNN pipelines", icon: "python", color: "3776AB" },
-        { name: "TypeScript", note: "KitchenCurator · contentremixhelper · POS system", icon: "typescript", color: "3178C6" },
-        { name: "JavaScript", note: "servease booking system", icon: "javascript", color: "F7DF1E" },
-        { name: "HTML", note: "education_website · roboadvisor · WIC archive", icon: "html5", color: "E34F26" },
-      ]},
-      { title: "Frameworks / Libraries", items: [
-        { name: "Flask", note: "education_website full-stack platform", icon: "flask", color: "C9D1D9" },
-        { name: "React", note: "academic-website · servease", icon: "react", color: "61DAFB" },
-        { name: "PyTorch", note: "skin-cancer classification · DL pipeline", icon: "pytorch", color: "EE4C2C" },
-        { name: "Tailwind CSS", note: "contentremixhelper · this very site", icon: "tailwindcss", color: "06B6D4" },
-        { name: "Vite", note: "frontend builds across SPA projects", icon: "vite", color: "646CFF" },
-      ]},
-      { title: "AI / ML", items: [
-        { name: "Google Gemini API", note: "roboadvisor receipt OCR · caption generation", icon: "googlegemini", color: "1B72E8" },
-        { name: "Ollama (Llama 3.1)", note: "ApaNewsHariTok local news summaries", icon: "ollama", color: "C9D1D9" },
-        { name: "CNN transfer learning", note: "11-architecture skin-cancer classifier", icon: null },
-        { name: "Hyperparameter tuning", note: "model comparison & selection", icon: null },
-        { name: "OCR", note: "receipt scanning in roboadvisor", icon: null },
-        { name: "Prompt engineering", note: "Bahasa Rojak captions · editorial drafts", icon: null },
-      ]},
-    ],
-  },
-  {
-    column: "Below the line",
-    groups: [
-      { title: "Automation", items: [
-        { name: "n8n", note: "Xiaomi launch monitors · news aggregation", icon: "n8n", color: "EA4B71" },
-        { name: "Telegram Bot API", note: "ApaNewsHariTok digests · crash alerts", icon: "telegram", color: "26A5E4" },
-        { name: "Feishu / Lark", note: "adailocal cards · Bitable stores", icon: null },
-        { name: "RSS pipelines", note: "Sarawak & Malaysia news ingestion", icon: "rss", color: "FF6600" },
-      ]},
-      { title: "Backend / DB", items: [
-        { name: "Firebase", note: "academic-website · servease", icon: "firebase", color: "DD2C00" },
-        { name: "SQLite", note: "ApaNewsHariTok local store", icon: "sqlite", color: "003B57" },
-        { name: "JWT", note: "education_website auth", icon: "jsonwebtokens", color: "C9D1D9" },
-        { name: "REST APIs", note: "across bots and web apps", icon: null },
-      ]},
-      { title: "Tools", items: [
-        { name: "Git / GitHub", note: "15+ repos shipped", icon: "github", color: "C9D1D9" },
-        { name: "Clerk auth", note: "contentremixhelper admin panel", icon: "clerk", color: "6C47FF" },
-        { name: "Cloudflare", note: "Women in Claude archive live", icon: "cloudflare", color: "F38020" },
-        { name: "Render", note: "roboadvisor deployed", icon: "render", color: "46E3B7" },
-        { name: "CapCut", note: "hackathon reels & interview highlights", icon: null },
-      ]},
-    ],
-  },
-];
-
-const SOFT_SKILLS = [
-  { name: "Team Facilitation", note: "11 teams mentored at the hackathon" },
-  { name: "Technical Leadership", note: "SAIYAN · facilitation team of four" },
-  { name: "Video Editing", note: "event reels for official campaigns" },
-  { name: "Videography", note: "on-site participant interviews" },
-  { name: "Communication", note: "Lee Tech News · community moderation" },
-];
-
-const CREDITS = [
-  { role: "Directed by", name: "Vincent Lee", cls: "hl" },
-  { role: "Written by", name: "15+ shipped repos", cls: "" },
-  { role: "Starring", name: "KitchenCurator", cls: "" },
-  { role: "", name: "ApaNewsHariTok", cls: "" },
-  { role: "", name: "adailocal", cls: "" },
-  { role: "", name: "n8n-xiaomi-tech-news", cls: "" },
-  { role: "Cinematography", name: "n8n workflows", cls: "" },
-  { role: "Sound", name: "Keyboard clatter", cls: "" },
-  { role: "Gaffer", name: "Ollama · Llama 3.1", cls: "" },
-  { role: "Special thanks", name: "Team Tekkonologia", cls: "teal" },
-  { role: "", name: "ANCHR AI Labs", cls: "teal" },
-  { role: "", name: "Women in Claude", cls: "teal" },
-  { role: "", name: "UTS, Sibu", cls: "teal" },
-  { role: "", name: "Xiaomi Community Malaysia", cls: "teal" },
-  { role: "Shot on location", name: "Kuching, Sarawak", cls: "" },
-  { role: "Runtime", name: "2023 – 2026", cls: "" },
-  { role: "Rating", name: "R — relentless", cls: "hl" },
-  { role: "Next", name: "Unwritten", cls: "hl" },
-];
-
 const TC_MARKS = [
   { id: "cold-open", h: 0, m: 0, s: 0 },
   { id: "logline", h: 0, m: 1, s: 22 },
@@ -220,8 +15,6 @@ const TC_MARKS = [
   { id: "gear", h: 1, m: 28, s: 15 },
   { id: "credits", h: 1, m: 47, s: 30 },
 ];
-
-const GITHUB_REPOS = "https://github.com/vincentlee001804?tab=repositories";
 
 /* ================= ENVIRONMENT ================= */
 
@@ -237,198 +30,17 @@ if (motionOn) document.documentElement.classList.add("motion-on");
 if (prefersReduced) document.documentElement.classList.add("reduced-motion");
 if (hasGsap) gsap.registerPlugin(ScrollTrigger);
 
-/* ================= RENDER ================= */
-
-function slotHtml(slot, tag, file, ratio) {
-  return `<div class="img-slot" data-slot="${slot}">
-      <div class="img-slot-inner">
-        <span class="img-slot-tag">${tag}</span>
-        <span class="img-slot-file">${file}</span>
-        <span class="img-slot-ratio">${ratio}</span>
-      </div>
-      <div class="img-slot-corners" aria-hidden="true"></div>
-    </div>`;
-}
-
-function signalHtml(signal) {
-  return signal.map((s, i) =>
-    i === 0 ? `[${s}]` : ` <span class="sig-arrow">→</span> [${s}]`
-  ).join("");
-}
-
-function renderReel() {
-  const strip = document.getElementById("reel-strip");
-  if (!strip) return;
-
-  let html = PROJECTS.map((p) => {
-    const media = p.image
-      ? `<img src="${p.image}" alt="${p.alt || p.name}" loading="lazy" />`
-      : slotHtml(p.slot, `${p.frame} — shot`, p.slotFile, "4 : 5");
-    const chips = p.chips.map((c) => `<span class="chip">${c}</span>`).join("");
-    const award = p.award ? `<span class="chip chip-award">${p.award}</span>` : "";
-    const link = p.link
-      ? `<a class="slate-link" href="${p.link}" target="_blank" rel="noopener">View on GitHub ↗</a>`
-      : `<span class="chip">Private</span>`;
-    /* .frame-expand is a SIBLING of the article, never nested inside it — the
-       article is role="button" and a <button> inside role="button" is invalid
-       interactive nesting. Only frames with a real image get one. */
-    const expand = p.image
-      ? `<button class="frame-expand" type="button" data-full="${p.image}" data-alt="${p.alt || p.name}" data-name="${p.name}" data-frame="${p.frame}" aria-label="View ${p.name} full frame">⤢</button>`
-      : "";
-    return `<div class="reel-card">
-        <article class="develop-card" data-reveal tabindex="0" role="button" aria-expanded="false" aria-label="${p.name} — reveal details">
-          <div class="develop-media">
-            ${media}
-            <div class="sheen" aria-hidden="true"></div>
-            <div class="develop-slate">
-              <div class="slate-top"><span>${p.lang} · ${p.year}</span><span>Frame ${p.frame}</span></div>
-              <h3>${p.name}</h3>
-              <p class="text-[#85858f] text-[0.78rem] leading-relaxed mb-2">${p.desc}</p>
-              <p class="signal-line">${signalHtml(p.signal)}</p>
-              <div class="slate-chips">${chips}${award}</div>
-              ${link}
-            </div>
-          </div>
-          <div class="develop-label">
-            <span class="frame-num">${p.frame}</span>
-            <span class="frame-name">${p.name}</span>
-          </div>
-        </article>
-        ${expand}
-      </div>`;
-  }).join("");
-
-  html += `<div class="reel-card">
-      <article class="develop-card" data-reveal tabindex="0" role="button" aria-expanded="false" aria-label="More in the can — reveal details">
-        <div class="develop-media">
-          <div class="can-grid">
-            ${OTHER_WORK.map((o) => `<div class="can-item"><strong>${o.name}</strong>${o.lang}</div>`).join("")}
-          </div>
-          <div class="sheen" aria-hidden="true"></div>
-          <div class="develop-slate">
-            <div class="slate-top"><span>Archive</span><span>Frame 05A</span></div>
-            <h3>More in the can</h3>
-            <p class="text-[#85858f] text-[0.78rem] leading-relaxed mb-2">Eleven more cuts in the vault — robo-advisor with receipt OCR, education platforms, booking systems, deep-learning pipelines.</p>
-            <p class="signal-line">[curiosity] <span class="sig-arrow">→</span> [15+ repos]</p>
-            <a class="slate-link" href="${GITHUB_REPOS}" target="_blank" rel="noopener">View all repos on GitHub ↗</a>
-          </div>
-        </div>
-        <div class="develop-label">
-          <span class="frame-num">05A</span>
-          <span class="frame-name">More in the can</span>
-        </div>
-      </article>
-    </div>`;
-
-  strip.innerHTML = html;
-}
-
-function renderCallSheet() {
-  const table = document.getElementById("call-table");
-  if (!table) return;
-
-  let html = `<div class="call-head-row" aria-hidden="true">
-      <span>Production</span><span>Role</span><span>Dates</span><span>Location</span>
-    </div>`;
-
-  html += CALL_SHEET.map((c, i) => {
-    const notes = c.notes.map((n) => `<li>${n}</li>`).join("");
-    const link = c.link
-      ? `<a class="call-notes-link" href="${c.link.url}" target="_blank" rel="noopener">${c.link.label}</a>`
-      : "";
-    return `<div class="call-row reveal">
-        <button class="call-row-btn" type="button" aria-expanded="false" aria-controls="call-notes-${i}">
-          <span class="call-prod">${c.prod}</span>
-          <span class="call-role">${c.role}</span>
-          <span class="call-dates">${c.dates}</span>
-          <span class="call-loc">${c.loc}</span>
-        </button>
-        <div class="call-notes" id="call-notes-${i}">
-          <div><ul>${notes}</ul>${link}</div>
-        </div>
-      </div>`;
-  }).join("");
-
-  table.innerHTML = html;
-}
-
-function gearIcon(it) {
-  if (!it.icon) return `<span class="gear-icon gear-glyph" aria-hidden="true">◆</span>`;
-  return `<img class="gear-icon" src="https://cdn.simpleicons.org/${it.icon}/${it.color || "C9D1D9"}" alt="" loading="lazy"
-       onerror="this.classList.add('icon-fallback');this.removeAttribute('src');this.textContent='◆';" />`;
-}
-
-function renderGear() {
-  const grid = document.getElementById("gear-grid");
-  if (!grid) return;
-
-  let take = 0;
-  const pad = (n) => String(n).padStart(2, "0");
-
-  /* Emit a flat list: each column contributes its title then its group units.
-     At md+ CSS places these on a shared grid with grid-auto-flow: column so the
-     three groups line up across columns (see .gear-grid). Keep GEAR at
-     2 columns x 3 groups — the grid-template-rows count depends on it. */
-  grid.innerHTML = GEAR.map((col) =>
-    `<p class="gear-col-title">${col.column}</p>` +
-    col.groups.map((g, gi) => `<div class="gear-unit${gi === 0 ? " is-first" : ""}">
-        <div class="gear-sprocket" aria-hidden="true"></div>
-        <div class="gear-group">
-          <h4>${g.title}</h4>
-          ${g.items.map((it) => {
-            take += 1;
-            return `<div class="gear-item reveal" data-reveal tabindex="0" role="button" aria-expanded="false">
-                <span class="gear-take" aria-hidden="true">${pad(take)}</span>
-                ${gearIcon(it)}
-                <div class="gear-body">
-                  <span class="gear-name">${it.name}</span>
-                  <div class="gear-note"><div>${it.note}</div></div>
-                </div>
-              </div>`;
-          }).join("")}
-        </div>
-      </div>`).join("")
-  ).join("");
-
-  const soft = document.getElementById("soft-skills");
-  if (soft) {
-    soft.innerHTML = SOFT_SKILLS
-      .map((s) => `<span class="fact-chip soft-skill" data-reveal tabindex="0" role="button" aria-expanded="false">
-          <span class="soft-skill-label">${s.name}</span>
-          <span class="soft-skill-note"><span>${s.note}</span></span>
-        </span>`)
-      .join("");
-  }
-}
+/* ================= MARQUEE ================= */
 
 function renderMarquee() {
   const track = document.getElementById("marquee-track");
   if (!track) return;
 
-  const names = GEAR.flatMap((c) => c.groups.flatMap((g) => g.items.map((i) => i.name)))
-    .concat(SOFT_SKILLS.map((s) => s.name));
+  const names = Array.from(document.querySelectorAll(".gear-name, .soft-skill-label"))
+    .map((el) => el.textContent.trim())
+    .filter(Boolean);
   const one = names.map((n) => `<span class="marquee-item">${n}</span>`).join("");
   track.innerHTML = one + one;
-}
-
-function renderCredits() {
-  const list = document.getElementById("credits-list");
-  if (!list) return;
-
-  list.innerHTML = CREDITS.map((c) => `<div class="credit-line">
-      <span class="credit-role">${c.role}</span>
-      <span class="credit-dots" aria-hidden="true"></span>
-      <span class="credit-name ${c.cls}">${c.name}</span>
-    </div>`).join("");
-}
-
-function renderScrubber() {
-  const track = document.getElementById("scrub-track");
-  if (!track) return;
-
-  track.innerHTML = ACT_LABELS.map((l, i) =>
-    `<button class="scrub-frame${i === 0 ? " is-active" : ""}" type="button" data-act="${i}" role="tab" aria-selected="${i === 0}" aria-label="Act ${l}">0${i + 1}</button>`
-  ).join("");
 }
 
 /* ================= REVEALS ================= */
@@ -1114,9 +726,12 @@ function initFrameView() {
   const indexEl = document.getElementById("frame-view-index");
   if (!view || !img) return;
 
-  const frames = PROJECTS
-    .filter((p) => p.image)
-    .map((p) => ({ src: p.image, alt: p.alt || p.name, name: p.name, frame: p.frame }));
+  const frames = Array.from(document.querySelectorAll(".frame-expand")).map((btn) => ({
+    src: btn.dataset.full,
+    alt: btn.dataset.alt || btn.dataset.name,
+    name: btn.dataset.name,
+    frame: btn.dataset.frame,
+  }));
   if (!frames.length) return;
 
   let at = 0;
@@ -1259,10 +874,12 @@ function initBackToTop() {
 
 /* ================= REEL AUTO-DEVELOP ================= */
 
-/* The frame index owns automatic development. Touch gets a one-at-a-time reveal
-   on every index change; fine pointers get frame 01 developed on arrival, then
-   keep their normal hover/focus/click model. Because the current media query is
-   checked on every drive, desktop ↔ touch switching works without a reload.
+/* The frame index owns automatic development. Every input mode gets a
+   one-at-a-time reveal on every index change, including the desktop pin and
+   scrolling backwards. Fine-pointer hover/focus temporarily overrides the
+   automatic card; leaving that card resumes the current index. Because the
+   current media query is checked on every drive, desktop ↔ touch switching
+   works without a reload.
 
    A click takes ownership (data-userToggled) until that card leaves the viewport.
    IntersectionObserver is used ONLY to release that ownership — never to choose
@@ -1273,7 +890,6 @@ function initReelAutoDevelop() {
   if (cards.length < 2 || prefersReduced) return;
 
   let currentIdx = 0;
-  let desktopInteracted = false;
   let lastFine = isFinePointer();
 
   function show(card) {
@@ -1293,15 +909,12 @@ function initReelAutoDevelop() {
        late during emulation, rotation or a detachable-keyboard change. */
     if (fine !== lastFine) {
       lastFine = fine;
-      desktopInteracted = false;
       cards.forEach((c) => delete c.dataset.userToggled);
     }
     if (cards.some((c) => c.dataset.userToggled)) return;
-    if (fine) {
-      if (desktopInteracted) return;
-      show(currentIdx === 0 ? cards[0] : null);
-      return;
-    }
+    if (fine && cards.some((card) =>
+      card.matches(":hover") || card.contains(document.activeElement)
+    )) return;
     show(cards[currentIdx]);
   }
   driveReelCard = drive;
@@ -1309,23 +922,27 @@ function initReelAutoDevelop() {
   cards.forEach((card) => {
     card.addEventListener("click", () => {
       card.dataset.userToggled = "1";
-      if (isFinePointer()) desktopInteracted = true;
     }, true);
 
-    /* Desktop's initial developed frame must not remain open beside a hovered
-       or focused neighbour. Once the visitor takes over, hover/focus owns the
-       presentation until the input mode changes. */
+    /* A hovered or focused neighbour temporarily owns the presentation without
+       leaving the automatic card open beside it. drive() checks the live
+       hover/focus state, so leaving the card resumes the current index. */
     const takeDesktopControl = () => {
       if (!isFinePointer()) return;
-      desktopInteracted = true;
       cards.forEach((other) => {
         if (other === card) return;
         other.classList.remove("is-open");
         other.setAttribute("aria-expanded", "false");
       });
     };
+    const releaseDesktopControl = () => {
+      if (!isFinePointer()) return;
+      requestAnimationFrame(() => drive(currentIdx));
+    };
     card.addEventListener("mouseenter", takeDesktopControl);
     card.addEventListener("focusin", takeDesktopControl);
+    card.addEventListener("mouseleave", releaseDesktopControl);
+    card.addEventListener("focusout", releaseDesktopControl);
   });
 
   if ("IntersectionObserver" in window) {
@@ -1701,12 +1318,7 @@ function initSceneNav() {
 /* ================= INIT ================= */
 
 function init() {
-  renderScrubber();
-  renderReel();
-  renderCallSheet();
-  renderGear();
   renderMarquee();
-  renderCredits();
   initReveals();
   initMagnetic();
   initCursor();
